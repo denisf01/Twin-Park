@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1701802900 source:z:\zadaca3\main.cpp
+	<tchar.h>
+	<windows.h>
+	<iostream>
+	<thread>
+	<random>
+
