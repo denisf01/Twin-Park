@@ -1,0 +1,3 @@
+#define IDD_TEAM_NAME 1000
+#define IDC_TEAM_NAME 1001
+#define IDC_SUBMIT 1002

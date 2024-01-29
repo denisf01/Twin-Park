@@ -9,6 +9,7 @@
 #include <iostream>
 #include <thread>
 #include <random>
+#include "resources.h"
 
 #define WIDTH 1000
 #define HEIGHT 700
@@ -25,6 +26,7 @@ void jumping();
 void loadBitmaps();
 void deleteBitmaps();
 void setDefaults();
+INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 struct Object
 {
@@ -43,7 +45,8 @@ struct Object
     int jumpTicks;
 };
 
-Object sheep;
+Object player1;
+Object player2;
 Object wolf;
 Object bird;
 
@@ -51,7 +54,9 @@ bool gameOver = false;
 bool isWolf = true;
 bool allowJump = true;
 
-HBITMAP bk, bkGameOver, platformWhite, platformBlack, sheepWR, sheepWL, sheepBR, sheepBL, birdWR, birdWL, birdBR, birdBL, arrowWR, arrowWL, arrowBR, arrowBL, wolfWR, wolfWL, wolfBR, wolfBL;
+int initHeight = 500;
+
+HBITMAP bk, bkGameOver, sheepWR, sheepWL, sheepBR, sheepBL, birdWR, birdWL, birdBR, birdBL, arrowWR, arrowWL, arrowBR, arrowBL, wolfWR, wolfWL, wolfBR, wolfBL, titleWhite, titleBlack, startWhite, startBlack;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -124,7 +129,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
             continue;
         }
         calculateSheepPosition(hwnd);
-        if (sheep.isJumping && GetTickCount() - sheep.jumpTicks > 50)
+        if (player1.isJumping && GetTickCount() - player1.jumpTicks > 50)
         {
 
             jumping();
@@ -132,16 +137,16 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
         if (bird.move)
             calculateBirdPosition(hwnd);
         else if (GetTickCount() - bird.ticks > 7000)
-            bird.move = true;
-        if (wolf.move)
-            calculateWolfPosition(hwnd);
-        else if (GetTickCount() - wolf.ticks > 5000)
-        {
-            isWolf = sheep.y < 149;
-            wolf.move = true;
-        }
+            //  bird.move = true;
+            if (wolf.move)
+                calculateWolfPosition(hwnd);
+            else if (GetTickCount() - wolf.ticks > 5000)
+            {
+                isWolf = player1.y < 149;
+                //   wolf.move = true;
+            }
         draw(hwnd);
-        isGameOver(hwnd);
+        // isGameOver(hwnd);
         Sleep(40);
     }
 
@@ -151,8 +156,8 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 
 void isGameOver(HWND hwnd)
 {
-    if ((!wolf.isRight && wolf.x > sheep.x && wolf.x < sheep.x + sheep.width - 60 && ((sheep.y == 0 && isWolf) || (sheep.y == 149 && !isWolf))) ||
-        (wolf.isRight && wolf.x + wolf.width - 60 > sheep.x && wolf.x + wolf.width < sheep.x + sheep.width && ((sheep.y == 0 && isWolf) || (sheep.y == 149 && !isWolf))))
+    if ((!wolf.isRight && wolf.x > player1.x && wolf.x < player1.x + player1.width - 60 && ((player1.y == 0 && isWolf) || (player1.y == 149 && !isWolf))) ||
+        (wolf.isRight && wolf.x + wolf.width - 60 > player1.x && wolf.x + wolf.width < player1.x + player1.width && ((player1.y == 0 && isWolf) || (player1.y == 149 && !isWolf))))
     {
         wolf.move = false;
         bird.move = false;
@@ -189,8 +194,8 @@ void draw(HWND hwnd)
     }
 
     background = bk;
-    sheepWhite = sheep.isRight ? sheepWR : sheepWL;
-    sheepBlack = sheep.isRight ? sheepBR : sheepBL;
+    sheepWhite = player1.isRight ? sheepWR : sheepWL;
+    sheepBlack = player1.isRight ? sheepBR : sheepBL;
     wolfWhite = wolf.isRight ? wolfWR : wolfWL;
     wolfBlack = wolf.isRight ? wolfBR : wolfBL;
     arrowWhite = wolf.isRight ? arrowWR : arrowWL;
@@ -208,12 +213,20 @@ void draw(HWND hwnd)
     GetObject(background, sizeof(BITMAP), &bm);
     StretchBlt(hdcMem, 0, 0, WIDTH, HEIGHT, hdcTmp, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
 
-    // platform
-    SelectObject(hdcTmp, platformWhite);
-    GetObject(platformWhite, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, WIDTH / 2, 400, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
-    SelectObject(hdcTmp, platformBlack);
-    BitBlt(hdcMem, WIDTH / 2, 400, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+    // title
+    SelectObject(hdcTmp, titleWhite);
+    GetObject(titleWhite, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 10, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+    SelectObject(hdcTmp, titleBlack);
+    BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 10, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+
+    // start button
+
+    SelectObject(hdcTmp, startWhite);
+    GetObject(startWhite, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+    SelectObject(hdcTmp, startBlack);
+    BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
 
     // wolf or arrow
     if (isWolf)
@@ -237,14 +250,23 @@ void draw(HWND hwnd)
         BitBlt(hdcMem, wolf.x, 570 - wolf.height - 140, wolf.width, wolf.height, hdcTmp, 0, 0, SRCPAINT);
     }
 
-    // sheep
+    // player1
     SelectObject(hdcTmp, sheepWhite);
     GetObject(sheepWhite, sizeof(BITMAP), &bm);
-    sheep.width = bm.bmWidth / 4;
-    sheep.height = bm.bmHeight / 2;
-    BitBlt(hdcMem, sheep.x, 575 - sheep.height + 30 - sheep.y, sheep.width, sheep.height, hdcTmp, sheep.i * sheep.width, sheep.j * sheep.height, SRCAND);
+    player1.width = bm.bmWidth / 8;
+    player1.height = bm.bmHeight / 2;
+    BitBlt(hdcMem, player1.x, initHeight - player1.height + 30 - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCAND);
     SelectObject(hdcTmp, sheepBlack);
-    BitBlt(hdcMem, sheep.x, 575 - sheep.height + 30 - sheep.y, sheep.width, sheep.height, hdcTmp, sheep.i * sheep.width, sheep.j * sheep.height, SRCPAINT);
+    BitBlt(hdcMem, player1.x, initHeight - player1.height + 30 - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCPAINT);
+
+    // player2
+    SelectObject(hdcTmp, sheepWhite);
+    GetObject(sheepWhite, sizeof(BITMAP), &bm);
+    player2.width = bm.bmWidth / 8;
+    player2.height = bm.bmHeight / 2;
+    BitBlt(hdcMem, player2.x, initHeight - player2.height + 30 - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCAND);
+    SelectObject(hdcTmp, sheepBlack);
+    BitBlt(hdcMem, player2.x, initHeight - player2.height + 30 - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCPAINT);
 
     // bird
     SelectObject(hdcTmp, birdWhite);
@@ -283,14 +305,16 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     case WM_KEYUP:
         if (VK_SPACE)
             allowJump = true;
-        sheep.i = 2;
-        sheep.j = 0;
+        player1.i = 2;
+        player1.j = 0;
         break;
     case WM_LBUTTONDOWN:
         cout << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
         gameOver = false;
         bird.ticks = GetTickCount();
         wolf.ticks = GetTickCount();
+        DialogBox(NULL, MAKEINTRESOURCE(IDD_TEAM_NAME), hwnd, DlgProcTeamName);
+
         break;
     case WM_DESTROY:
         deleteBitmaps();
@@ -306,44 +330,61 @@ void calculateSheepPosition(HWND hwnd)
 {
     if (isPressed(VK_SPACE))
     {
-        if (allowJump && (sheep.y == 0 && (sheep.y = 49) || (sheep.y == 149 && sheep.x > 500 && sheep.x < 800 - sheep.width) && (sheep.y = 199)))
+        if (allowJump && (player1.y == 0 && (player1.y = 49) || (player1.y == 149 && player1.x > 500 && player1.x < 800 - player1.width) && (player1.y = 199)))
         {
-            sheep.isJumping = true;
+            player1.isJumping = true;
             allowJump = false;
-            sheep.jumpTicks = GetTickCount();
+            player1.jumpTicks = GetTickCount();
         }
     }
-    if (isPressed(VK_RIGHT) || isPressed(0x44))
+    if (isPressed(VK_RIGHT))
     {
-        sheep.isRight = true;
-        if (sheep.x + sheep.width <= WIDTH)
-            sheep.x += 10;
-        if (sheep.y == 149 && (sheep.x < 500 || sheep.x > 800 - sheep.width) && !sheep.isJumping)
+        player1.isRight = true;
+        if (player1.x + player1.width <= WIDTH)
+            player1.x += 10;
+        if (player1.y == 149 && (player1.x < 500 || player1.x > 800 - player1.width) && !player1.isJumping)
         {
-            sheep.y = 150;
-            sheep.isJumping = true;
+            player1.y = 150;
+            player1.isJumping = true;
         }
-        if (++sheep.i > 3)
+        if (++player1.i > 7)
         {
-            sheep.i = 0;
-            ++sheep.j %= 2;
+            player1.i = 0;
+            ++player1.j %= 2;
         }
     }
 
-    else if (isPressed(VK_LEFT) || isPressed(0x41))
+    if (isPressed(0x44))
     {
-        sheep.isRight = false;
-        if (sheep.x >= 0)
-            sheep.x -= 10;
-        if (sheep.y == 149 && (sheep.x < 500 || sheep.x > 800 - sheep.width) && !sheep.isJumping)
+        player2.isRight = true;
+        if (player2.x + player2.width <= WIDTH)
+            player2.x += 10;
+        if (player2.y == 149 && (player2.x < 500 || player2.x > 800 - player2.width) && !player2.isJumping)
         {
-            sheep.y = 150;
-            sheep.isJumping = true;
+            player2.y = 150;
+            player2.isJumping = true;
         }
-        if (++sheep.i > 3)
+        if (++player2.i > 7)
         {
-            sheep.i = 0;
-            ++sheep.j %= 2;
+            player2.i = 0;
+            ++player2.j %= 2;
+        }
+    }
+
+    if (isPressed(VK_LEFT))
+    {
+        player1.isRight = false;
+        if (player1.x >= 0)
+            player1.x -= 10;
+        if (player1.y == 149 && (player1.x < 500 || player1.x > 800 - player1.width) && !player1.isJumping)
+        {
+            player1.y = 150;
+            player1.isJumping = true;
+        }
+        if (++player1.i > 3)
+        {
+            player1.i = 0;
+            ++player1.j %= 2;
         }
     }
 }
@@ -409,42 +450,46 @@ void calculateWolfPosition(HWND hwnd)
 
 void jumping()
 {
-    if (sheep.y == 200 && sheep.x > 500 && sheep.x < 800 - sheep.width)
+    if (player1.y == 200 && player1.x > 500 && player1.x < 800 - player1.width)
     {
-        sheep.isJumping = false;
-        sheep.y = 149;
+        player1.isJumping = false;
+        player1.y = 149;
     }
-    else if (sheep.y == 50)
+    else if (player1.y == 50)
     {
-        sheep.isJumping = false;
-        sheep.y = 0;
+        player1.isJumping = false;
+        player1.y = 0;
     }
-    else if (sheep.y == 149)
+    else if (player1.y == 149)
     {
-        sheep.y = 200;
+        player1.y = 200;
         cout << "test";
     }
-    else if (sheep.y == 349)
-        sheep.y = 300;
-    else if (sheep.y % 10)
-        sheep.y += 50;
+    else if (player1.y == 349)
+        player1.y = 300;
+    else if (player1.y % 10)
+        player1.y += 50;
     else
-        sheep.y -= 50;
+        player1.y -= 50;
 
-    sheep.jumpTicks = GetTickCount();
+    player1.jumpTicks = GetTickCount();
 }
 
 void loadBitmaps()
 {
-    bk = (HBITMAP)LoadImage(NULL, "background.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    bk = (HBITMAP)LoadImage(NULL, "introBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     bkGameOver = (HBITMAP)LoadImage(NULL, "gameOver.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    platformWhite = (HBITMAP)LoadImage(NULL, "platformWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    platformBlack = (HBITMAP)LoadImage(NULL, "platformBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-    sheepWR = (HBITMAP)LoadImage(NULL, "sheepWhiteRight.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    sheepWL = (HBITMAP)LoadImage(NULL, "sheepWhiteLeft.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    sheepBR = (HBITMAP)LoadImage(NULL, "sheepBlackRight.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    sheepBL = (HBITMAP)LoadImage(NULL, "sheepBlackLeft.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    titleWhite = (HBITMAP)LoadImage(NULL, "titleWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    titleBlack = (HBITMAP)LoadImage(NULL, "titleBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    startWhite = (HBITMAP)LoadImage(NULL, "startWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    startBlack = (HBITMAP)LoadImage(NULL, "startBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    sheepWR = (HBITMAP)LoadImage(NULL, "playerWR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    sheepWL = (HBITMAP)LoadImage(NULL, "playerWL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    sheepBR = (HBITMAP)LoadImage(NULL, "playerBR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    sheepBL = (HBITMAP)LoadImage(NULL, "playerBL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     birdWR = (HBITMAP)LoadImage(NULL, "birdWhiteRight.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     birdWL = (HBITMAP)LoadImage(NULL, "birdWhiteLeft.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -467,8 +512,6 @@ void deleteBitmaps()
 
     DeleteObject(bk);
     DeleteObject(bkGameOver);
-    DeleteObject(platformWhite);
-    DeleteObject(platformBlack);
     DeleteObject(sheepWR);
     DeleteObject(sheepWL);
     DeleteObject(sheepBR);
@@ -489,8 +532,46 @@ void deleteBitmaps()
 
 void setDefaults()
 {
-    sheep.x = WIDTH / 2;
+    player1.x = WIDTH / 2;
+    player2.x = WIDTH / 6;
     wolf.x = -200;
     bird.x = -100;
     bird.y = -35;
+}
+
+INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+
+    case WM_COMMAND:
+    {
+
+        switch (LOWORD(wParam))
+        {
+        case IDC_SUBMIT:
+        {
+            char tempUnos[50];
+            tempUnos[0] = 0;
+            GetWindowText(GetDlgItem(hdlg, IDC_TEAM_NAME), tempUnos, sizeof(tempUnos));
+
+            // if (tempUnos[0] == 0)
+            // {
+            //     MessageBox(hdlg, "Potrebno je unijeti sve podatke", "Gre�ka", MB_OK | MB_ICONWARNING);
+            //     break;
+            // }
+            cout << string(tempUnos);
+            EndDialog(hdlg, 0);
+        }
+        }
+        return TRUE;
+    }
+    case WM_CLOSE:
+    {
+        EndDialog(hdlg, 0);
+        return TRUE;
+    }
+    default:
+        return FALSE;
+    }
 }
