@@ -28,14 +28,19 @@ void deleteBitmaps();
 void setDefaults();
 INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-struct Object
+class Object
 {
-    Object() : move{false}, isJumping{false}, isRight{true} {}
-
+public:
     int width;
     int height;
     int x;
     int y;
+};
+
+class Player : public Object
+{
+public:
+    Player() : Object(), move{false}, isJumping{false}, isRight{true} {}
     bool move;
     bool isJumping;
     DWORD ticks;
@@ -45,18 +50,16 @@ struct Object
     int jumpTicks;
 };
 
-Object player1;
-Object player2;
-Object wolf;
-Object bird;
+Player player1;
+Player player2;
 
 bool gameOver = false;
-bool isWolf = true;
 bool allowJump = true;
 
-int initHeight = 500;
+int introInitHeight = 500;
 
-HBITMAP bk, bkGameOver, sheepWR, sheepWL, sheepBR, sheepBL, birdWR, birdWL, birdBR, birdBL, arrowWR, arrowWL, arrowBR, arrowBL, wolfWR, wolfWL, wolfBR, wolfBL, titleWhite, titleBlack, startWhite, startBlack;
+HBITMAP bk, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack;
+HBITMAP player2WR, player2WL, player2BR, player2BL;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -129,22 +132,10 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
             continue;
         }
         calculateSheepPosition(hwnd);
-        if (player1.isJumping && GetTickCount() - player1.jumpTicks > 50)
+        if (player1.isJumping && GetTickCount() - player1.jumpTicks > 50 || player2.isJumping && GetTickCount() - player2.jumpTicks > 50)
         {
-
             jumping();
         }
-        if (bird.move)
-            calculateBirdPosition(hwnd);
-        else if (GetTickCount() - bird.ticks > 7000)
-            //  bird.move = true;
-            if (wolf.move)
-                calculateWolfPosition(hwnd);
-            else if (GetTickCount() - wolf.ticks > 5000)
-            {
-                isWolf = player1.y < 149;
-                //   wolf.move = true;
-            }
         draw(hwnd);
         // isGameOver(hwnd);
         Sleep(40);
@@ -154,28 +145,11 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
     return messages.wParam;
 }
 
-void isGameOver(HWND hwnd)
-{
-    if ((!wolf.isRight && wolf.x > player1.x && wolf.x < player1.x + player1.width - 60 && ((player1.y == 0 && isWolf) || (player1.y == 149 && !isWolf))) ||
-        (wolf.isRight && wolf.x + wolf.width - 60 > player1.x && wolf.x + wolf.width < player1.x + player1.width && ((player1.y == 0 && isWolf) || (player1.y == 149 && !isWolf))))
-    {
-        wolf.move = false;
-        bird.move = false;
-        gameOver = true;
-        wolf.x = -200;
-        wolf.isRight = true;
-        bird.isRight = true;
-        bird.x = -100;
-        bird.y = -35;
-        draw(hwnd);
-    }
-}
-
 void draw(HWND hwnd)
 {
     HDC hdc = GetDC(hwnd);
     HDC hdcMem, hdcTmp;
-    HBITMAP hbmMem, background, sheepWhite, sheepBlack, wolfWhite, wolfBlack, birdWhite, birdBlack, arrowWhite, arrowBlack, tmp1, tmp2;
+    HBITMAP hbmMem, background, player1White, player1Black, tmp1, tmp2, player2White, player2Black;
     BITMAP bm;
 
     if (gameOver)
@@ -194,14 +168,11 @@ void draw(HWND hwnd)
     }
 
     background = bk;
-    sheepWhite = player1.isRight ? sheepWR : sheepWL;
-    sheepBlack = player1.isRight ? sheepBR : sheepBL;
-    wolfWhite = wolf.isRight ? wolfWR : wolfWL;
-    wolfBlack = wolf.isRight ? wolfBR : wolfBL;
-    arrowWhite = wolf.isRight ? arrowWR : arrowWL;
-    arrowBlack = wolf.isRight ? arrowBR : arrowBL;
-    birdWhite = bird.isRight ? birdWR : birdWL;
-    birdBlack = bird.isRight ? birdBR : birdBL;
+    player1White = player1.isRight ? player1WR : player1WL;
+    player1Black = player1.isRight ? player1BR : player1BL;
+
+    player2White = player2.isRight ? player2WR : player2WL;
+    player2Black = player2.isRight ? player2BR : player2BL;
 
     hdcMem = CreateCompatibleDC(hdc);
     hbmMem = CreateCompatibleBitmap(hdc, WIDTH, HEIGHT);
@@ -228,54 +199,23 @@ void draw(HWND hwnd)
     SelectObject(hdcTmp, startBlack);
     BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
 
-    // wolf or arrow
-    if (isWolf)
-    {
-        SelectObject(hdcTmp, wolfWhite);
-        GetObject(wolfWhite, sizeof(BITMAP), &bm);
-        wolf.width = bm.bmWidth / 3;
-        wolf.height = bm.bmHeight / 2;
-        BitBlt(hdcMem, wolf.x, 575 - wolf.height + 30, wolf.width, wolf.height, hdcTmp, wolf.i * wolf.width, wolf.j * wolf.height, SRCAND);
-        SelectObject(hdcTmp, wolfBlack);
-        BitBlt(hdcMem, wolf.x, 575 - wolf.height + 30, wolf.width, wolf.height, hdcTmp, wolf.i * wolf.width, wolf.j * wolf.height, SRCPAINT);
-    }
-    else
-    {
-        SelectObject(hdcTmp, arrowWhite);
-        GetObject(arrowWhite, sizeof(BITMAP), &bm);
-        wolf.width = bm.bmWidth;
-        wolf.height = bm.bmHeight;
-        BitBlt(hdcMem, wolf.x, 570 - wolf.height - 140, wolf.width, wolf.height, hdcTmp, 0, 0, SRCAND);
-        SelectObject(hdcTmp, arrowBlack);
-        BitBlt(hdcMem, wolf.x, 570 - wolf.height - 140, wolf.width, wolf.height, hdcTmp, 0, 0, SRCPAINT);
-    }
-
     // player1
-    SelectObject(hdcTmp, sheepWhite);
-    GetObject(sheepWhite, sizeof(BITMAP), &bm);
+    SelectObject(hdcTmp, player1White);
+    GetObject(player1White, sizeof(BITMAP), &bm);
     player1.width = bm.bmWidth / 8;
     player1.height = bm.bmHeight / 2;
-    BitBlt(hdcMem, player1.x, initHeight - player1.height + 30 - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCAND);
-    SelectObject(hdcTmp, sheepBlack);
-    BitBlt(hdcMem, player1.x, initHeight - player1.height + 30 - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCPAINT);
+    BitBlt(hdcMem, player1.x, introInitHeight - player1.height + 30 - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCAND);
+    SelectObject(hdcTmp, player1Black);
+    BitBlt(hdcMem, player1.x, introInitHeight - player1.height + 30 - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCPAINT);
 
     // player2
-    SelectObject(hdcTmp, sheepWhite);
-    GetObject(sheepWhite, sizeof(BITMAP), &bm);
+    SelectObject(hdcTmp, player2White);
+    GetObject(player2White, sizeof(BITMAP), &bm);
     player2.width = bm.bmWidth / 8;
     player2.height = bm.bmHeight / 2;
-    BitBlt(hdcMem, player2.x, initHeight - player2.height + 30 - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCAND);
-    SelectObject(hdcTmp, sheepBlack);
-    BitBlt(hdcMem, player2.x, initHeight - player2.height + 30 - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCPAINT);
-
-    // bird
-    SelectObject(hdcTmp, birdWhite);
-    GetObject(birdWhite, sizeof(BITMAP), &bm);
-    bird.width = bm.bmWidth / 5;
-    bird.height = bm.bmHeight / 2;
-    BitBlt(hdcMem, bird.x, bird.y, bird.width, bird.height, hdcTmp, bird.i * bird.width, bird.j * bird.height, SRCAND);
-    SelectObject(hdcTmp, birdBlack);
-    BitBlt(hdcMem, bird.x, bird.y, bird.width, bird.height, hdcTmp, bird.i * bird.width, bird.j * bird.height, SRCPAINT);
+    BitBlt(hdcMem, player2.x, introInitHeight - player2.height + 30 - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCAND);
+    SelectObject(hdcTmp, player2Black);
+    BitBlt(hdcMem, player2.x, introInitHeight - player2.height + 30 - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCPAINT);
 
     GetObject(hbmMem, sizeof(BITMAP), &bm);
     BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
@@ -297,8 +237,6 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     switch (message) /* handle the messages */
     {
     case WM_CREATE:
-        bird.ticks = GetTickCount();
-        wolf.ticks = GetTickCount();
         loadBitmaps();
         setDefaults();
         break;
@@ -311,8 +249,6 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     case WM_LBUTTONDOWN:
         cout << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
         gameOver = false;
-        bird.ticks = GetTickCount();
-        wolf.ticks = GetTickCount();
         DialogBox(NULL, MAKEINTRESOURCE(IDD_TEAM_NAME), hwnd, DlgProcTeamName);
 
         break;
@@ -328,7 +264,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 
 void calculateSheepPosition(HWND hwnd)
 {
-    if (isPressed(VK_SPACE))
+    if (isPressed(VK_UP))
     {
         if (allowJump && (player1.y == 0 && (player1.y = 49) || (player1.y == 149 && player1.x > 500 && player1.x < 800 - player1.width) && (player1.y = 199)))
         {
@@ -342,120 +278,60 @@ void calculateSheepPosition(HWND hwnd)
         player1.isRight = true;
         if (player1.x + player1.width <= WIDTH)
             player1.x += 10;
-        if (player1.y == 149 && (player1.x < 500 || player1.x > 800 - player1.width) && !player1.isJumping)
-        {
-            player1.y = 150;
-            player1.isJumping = true;
-        }
         if (++player1.i > 7)
         {
             player1.i = 0;
             ++player1.j %= 2;
         }
     }
-
-    if (isPressed(0x44))
-    {
-        player2.isRight = true;
-        if (player2.x + player2.width <= WIDTH)
-            player2.x += 10;
-        if (player2.y == 149 && (player2.x < 500 || player2.x > 800 - player2.width) && !player2.isJumping)
-        {
-            player2.y = 150;
-            player2.isJumping = true;
-        }
-        if (++player2.i > 7)
-        {
-            player2.i = 0;
-            ++player2.j %= 2;
-        }
-    }
-
     if (isPressed(VK_LEFT))
     {
         player1.isRight = false;
         if (player1.x >= 0)
             player1.x -= 10;
-        if (player1.y == 149 && (player1.x < 500 || player1.x > 800 - player1.width) && !player1.isJumping)
-        {
-            player1.y = 150;
-            player1.isJumping = true;
-        }
         if (++player1.i > 3)
         {
             player1.i = 0;
             ++player1.j %= 2;
         }
     }
-}
 
-void calculateBirdPosition(HWND hwnd)
-{
-    if (++bird.i > 4)
+    if (isPressed(0x57)) // VK_W
     {
-        bird.i = 0;
-        ++bird.j %= 2;
-    }
-    if (bird.isRight)
-    {
-        if (bird.x >= WIDTH + 100)
+        if (allowJump && (player2.y == 0 && (player2.y = 49) || (player2.y == 149 && player2.x > 500 && player2.x < 800 - player2.width) && (player2.y = 199)))
         {
-            bird.isRight = false;
-            bird.move = false;
-            bird.ticks = GetTickCount();
+            player2.isJumping = true;
+            allowJump = false;
+            player2.jumpTicks = GetTickCount();
         }
-        else
-            bird.x += 20;
-        if (bird.x >= WIDTH / 2)
-            bird.y -= 7;
-        else
-            bird.y += 7;
     }
-    else
+    if (isPressed(0x44)) // VK_D
     {
-        if (bird.x <= -100)
+        player2.isRight = true;
+        if (player2.x + player2.width <= WIDTH)
+            player2.x += 10;
+        if (++player2.i > 7)
         {
-            bird.move = false;
-            bird.isRight = true;
-            bird.ticks = GetTickCount();
+            player2.i = 0;
+            ++player2.j %= 2;
         }
-        else
-            bird.x -= 20;
-        if (bird.x >= WIDTH / 2)
-            bird.y += 7;
-        else
-            bird.y -= 7;
     }
-}
-
-void calculateWolfPosition(HWND hwnd)
-{
-    if ((wolf.isRight && wolf.x >= WIDTH) || (!wolf.isRight && wolf.x <= -200))
+    if (isPressed(0x41)) // VK_A
     {
-        wolf.move = false;
-        wolf.isRight = rand() % 2;
-        wolf.x = wolf.isRight ? -200 : WIDTH + 10;
-        wolf.ticks = GetTickCount();
-    }
-    else
-    {
-        wolf.x += wolf.isRight ? 20 : -20;
-        if (++wolf.i > 2)
+        player2.isRight = false;
+        if (player2.x >= 0)
+            player2.x -= 10;
+        if (++player2.i > 3)
         {
-            wolf.i = 0;
-            ++wolf.j %= 2;
+            player2.i = 0;
+            ++player2.j %= 2;
         }
     }
 }
 
 void jumping()
 {
-    if (player1.y == 200 && player1.x > 500 && player1.x < 800 - player1.width)
-    {
-        player1.isJumping = false;
-        player1.y = 149;
-    }
-    else if (player1.y == 50)
+    if (player1.y == 50)
     {
         player1.isJumping = false;
         player1.y = 0;
@@ -463,7 +339,6 @@ void jumping()
     else if (player1.y == 149)
     {
         player1.y = 200;
-        cout << "test";
     }
     else if (player1.y == 349)
         player1.y = 300;
@@ -486,25 +361,15 @@ void loadBitmaps()
     startWhite = (HBITMAP)LoadImage(NULL, "startWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     startBlack = (HBITMAP)LoadImage(NULL, "startBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-    sheepWR = (HBITMAP)LoadImage(NULL, "playerWR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    sheepWL = (HBITMAP)LoadImage(NULL, "playerWL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    sheepBR = (HBITMAP)LoadImage(NULL, "playerBR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    sheepBL = (HBITMAP)LoadImage(NULL, "playerBL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1WR = (HBITMAP)LoadImage(NULL, "playerWR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1WL = (HBITMAP)LoadImage(NULL, "playerWL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1BR = (HBITMAP)LoadImage(NULL, "playerBR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1BL = (HBITMAP)LoadImage(NULL, "playerBL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-    birdWR = (HBITMAP)LoadImage(NULL, "birdWhiteRight.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    birdWL = (HBITMAP)LoadImage(NULL, "birdWhiteLeft.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    birdBR = (HBITMAP)LoadImage(NULL, "birdBlackRight.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    birdBL = (HBITMAP)LoadImage(NULL, "birdBlackLeft.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-
-    arrowWR = (HBITMAP)LoadImage(NULL, "arrowWhiteRight.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    arrowWL = (HBITMAP)LoadImage(NULL, "arrowWhiteLeft.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    arrowBR = (HBITMAP)LoadImage(NULL, "arrowBlackRight.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    arrowBL = (HBITMAP)LoadImage(NULL, "arrowBlackLeft.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-
-    wolfWR = (HBITMAP)LoadImage(NULL, "wolfWhiteRight.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    wolfWL = (HBITMAP)LoadImage(NULL, "wolfWhiteLeft.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    wolfBR = (HBITMAP)LoadImage(NULL, "wolfBlackRight.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    wolfBL = (HBITMAP)LoadImage(NULL, "wolfBlackLeft.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2WR = (HBITMAP)LoadImage(NULL, "playerWR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2WL = (HBITMAP)LoadImage(NULL, "playerWL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2BR = (HBITMAP)LoadImage(NULL, "playerBR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2BL = (HBITMAP)LoadImage(NULL, "playerBL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 }
 
 void deleteBitmaps()
@@ -512,31 +377,21 @@ void deleteBitmaps()
 
     DeleteObject(bk);
     DeleteObject(bkGameOver);
-    DeleteObject(sheepWR);
-    DeleteObject(sheepWL);
-    DeleteObject(sheepBR);
-    DeleteObject(sheepBL);
-    DeleteObject(birdWR);
-    DeleteObject(birdWL);
-    DeleteObject(birdBR);
-    DeleteObject(birdBL);
-    DeleteObject(arrowWR);
-    DeleteObject(arrowWL);
-    DeleteObject(arrowBR);
-    DeleteObject(arrowBL);
-    DeleteObject(wolfWR);
-    DeleteObject(wolfWL);
-    DeleteObject(wolfBR);
-    DeleteObject(wolfBL);
+    DeleteObject(player1WR);
+    DeleteObject(player1WL);
+    DeleteObject(player1BR);
+    DeleteObject(player1BL);
+
+    DeleteObject(player2WR);
+    DeleteObject(player2WL);
+    DeleteObject(player2BR);
+    DeleteObject(player2BL);
 }
 
 void setDefaults()
 {
     player1.x = WIDTH / 2;
     player2.x = WIDTH / 6;
-    wolf.x = -200;
-    bird.x = -100;
-    bird.y = -35;
 }
 
 INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
