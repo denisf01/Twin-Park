@@ -367,24 +367,25 @@ void jumping()
 
 void loadBitmaps()
 {
-    bk = (HBITMAP)LoadImage(NULL, "introBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    bkGameOver = (HBITMAP)LoadImage(NULL, "gameOver.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    bk = (HBITMAP)LoadImage(NULL, "assets/introBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    bkGameOver = (HBITMAP)LoadImage(NULL, "assets/gameOver.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-    titleWhite = (HBITMAP)LoadImage(NULL, "titleWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    titleBlack = (HBITMAP)LoadImage(NULL, "titleBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    titleWhite = (HBITMAP)LoadImage(NULL, "assets/titleWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    titleBlack = (HBITMAP)LoadImage(NULL, "assets/titleBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-    startWhite = (HBITMAP)LoadImage(NULL, "startWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    startBlack = (HBITMAP)LoadImage(NULL, "startBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    startWhite = (HBITMAP)LoadImage(NULL, "assets/startWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    startBlack = (HBITMAP)LoadImage(NULL, "assets/startBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-    player1WR = (HBITMAP)LoadImage(NULL, "playerWR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    player1WL = (HBITMAP)LoadImage(NULL, "playerWL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    player1BR = (HBITMAP)LoadImage(NULL, "playerBR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    player1BL = (HBITMAP)LoadImage(NULL, "playerBL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1WR = (HBITMAP)LoadImage(NULL, "assets/playerWR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1WL = (HBITMAP)LoadImage(NULL, "assets/playerWL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1BR = (HBITMAP)LoadImage(NULL, "assets/playerBR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1BL = (HBITMAP)LoadImage(NULL, "assets/playerBL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-    player2WR = (HBITMAP)LoadImage(NULL, "playerWR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    player2WL = (HBITMAP)LoadImage(NULL, "playerWL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    player2BR = (HBITMAP)LoadImage(NULL, "playerBR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    player2BL = (HBITMAP)LoadImage(NULL, "playerBL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2WR = (HBITMAP)LoadImage(NULL, "assets/player2WR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2WL = (HBITMAP)LoadImage(NULL, "assets/player2WL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2BR = (HBITMAP)LoadImage(NULL, "assets/player2BR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2BL = (HBITMAP)LoadImage(NULL, "assets/player2BL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
 }
 
 void deleteBitmaps()
