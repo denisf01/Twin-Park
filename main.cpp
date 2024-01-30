@@ -53,7 +53,6 @@ Player player1;
 Player player2;
 
 bool gameOver = false;
-bool allowJump = true;
 
 int introInitHeight = 500;
 
@@ -131,7 +130,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
             continue;
         }
         calculateSheepPosition(hwnd);
-        if (player1.isJumping && GetTickCount() - player1.jumpTicks > 50 || player2.isJumping && GetTickCount() - player2.jumpTicks > 50)
+        if (player1.isJumping && GetTickCount() - player1.jumpTicks > 30 || player2.isJumping && GetTickCount() - player2.jumpTicks > 30)
         {
             jumping();
         }
@@ -240,10 +239,6 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
         setDefaults();
         break;
     case WM_KEYUP:
-        if (VK_SPACE)
-            allowJump = true;
-        player1.i = 2;
-        player1.j = 0;
         break;
     case WM_LBUTTONDOWN:
         cout << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
@@ -267,7 +262,6 @@ void calculateSheepPosition(HWND hwnd)
     {
 
         player1.isJumping = true;
-        allowJump = false;
         player1.jumpTicks = GetTickCount();
     }
     if (isPressed(VK_RIGHT))
@@ -296,7 +290,6 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(0x57)) // VK_W
     {
         player2.isJumping = true;
-        allowJump = false;
         player2.jumpTicks = GetTickCount();
     }
     if (isPressed(0x44)) // VK_D
@@ -327,7 +320,15 @@ void jumping()
 {
     if (player1.isJumping)
     {
-        cout << player1.y << endl;
+        if (player1.isFalling && player1.y == 100 && (player1.x >= player2.x - player2.height / 2 && player1.x <= player2.x + player2.height / 2))
+        {
+            player1.isFalling = false;
+            player1.isJumping = false;
+            player1.y = player2.height;
+            player1.jumpTicks = GetTickCount();
+            return;
+        }
+
         if (player1.isFalling && player1.y == 50)
         {
             player1.y = 0;
@@ -385,7 +386,6 @@ void loadBitmaps()
     player2WL = (HBITMAP)LoadImage(NULL, "assets/player2WL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     player2BR = (HBITMAP)LoadImage(NULL, "assets/player2BR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     player2BL = (HBITMAP)LoadImage(NULL, "assets/player2BL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-
 }
 
 void deleteBitmaps()
