@@ -40,14 +40,13 @@ public:
 class Player : public Object
 {
 public:
-    Player() : Object(), move{false}, isJumping{false}, isRight{true} {}
-    bool move;
+    Player() : Object(), isJumping{false}, isRight{true}, isFalling{false} {}
     bool isJumping;
-    DWORD ticks;
     int i;
     int j;
     bool isRight;
     int jumpTicks;
+    bool isFalling;
 };
 
 Player player1;
@@ -266,12 +265,10 @@ void calculateSheepPosition(HWND hwnd)
 {
     if (isPressed(VK_UP))
     {
-        if (allowJump && (player1.y == 0 && (player1.y = 49) || (player1.y == 149 && player1.x > 500 && player1.x < 800 - player1.width) && (player1.y = 199)))
-        {
-            player1.isJumping = true;
-            allowJump = false;
-            player1.jumpTicks = GetTickCount();
-        }
+
+        player1.isJumping = true;
+        allowJump = false;
+        player1.jumpTicks = GetTickCount();
     }
     if (isPressed(VK_RIGHT))
     {
@@ -298,12 +295,9 @@ void calculateSheepPosition(HWND hwnd)
 
     if (isPressed(0x57)) // VK_W
     {
-        if (allowJump && (player2.y == 0 && (player2.y = 49) || (player2.y == 149 && player2.x > 500 && player2.x < 800 - player2.width) && (player2.y = 199)))
-        {
-            player2.isJumping = true;
-            allowJump = false;
-            player2.jumpTicks = GetTickCount();
-        }
+        player2.isJumping = true;
+        allowJump = false;
+        player2.jumpTicks = GetTickCount();
     }
     if (isPressed(0x44)) // VK_D
     {
@@ -331,23 +325,44 @@ void calculateSheepPosition(HWND hwnd)
 
 void jumping()
 {
-    if (player1.y == 50)
+    if (player1.isJumping)
     {
-        player1.isJumping = false;
-        player1.y = 0;
-    }
-    else if (player1.y == 149)
-    {
-        player1.y = 200;
-    }
-    else if (player1.y == 349)
-        player1.y = 300;
-    else if (player1.y % 10)
-        player1.y += 50;
-    else
-        player1.y -= 50;
+        cout << player1.y << endl;
+        if (player1.isFalling && player1.y == 50)
+        {
+            player1.y = 0;
+            player1.isJumping = false;
+            player1.isFalling = false;
+        }
+        else if (player1.y == 200)
+        {
+            player1.y = 150;
+            player1.isFalling = true;
+        }
+        else
+            player1.y += player1.isFalling ? -50 : 50;
 
-    player1.jumpTicks = GetTickCount();
+        player1.jumpTicks = GetTickCount();
+    }
+
+    if (player2.isJumping)
+    {
+        if (player2.isFalling && player2.y == 50)
+        {
+            player2.y = 0;
+            player2.isJumping = false;
+            player2.isFalling = false;
+        }
+        else if (player2.y == 200)
+        {
+            player2.y = 150;
+            player2.isFalling = true;
+        }
+        else
+            player2.y += player2.isFalling ? -50 : 50;
+
+        player2.jumpTicks = GetTickCount();
+    }
 }
 
 void loadBitmaps()
