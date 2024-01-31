@@ -45,7 +45,6 @@ public:
     int i;
     int j;
     bool isRight;
-    int jumpTicks;
     bool isFalling;
 };
 
@@ -130,13 +129,13 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
             continue;
         }
         calculateSheepPosition(hwnd);
-        if (player1.isJumping && GetTickCount() - player1.jumpTicks > 30 || player2.isJumping && GetTickCount() - player2.jumpTicks > 30)
+        if (player1.isJumping || player2.isJumping)
         {
             jumping();
         }
         draw(hwnd);
         // isGameOver(hwnd);
-        Sleep(40);
+        // Sleep(40);
     }
 
     /* The program return-value is 0 - The value that PostQuitMessage() gave */
@@ -262,13 +261,12 @@ void calculateSheepPosition(HWND hwnd)
     {
 
         player1.isJumping = true;
-        player1.jumpTicks = GetTickCount();
     }
     if (isPressed(VK_RIGHT))
     {
         player1.isRight = true;
         if (player1.x + player1.width <= WIDTH)
-            player1.x += 10;
+            player1.x += 1;
         if (++player1.i > 7)
         {
             player1.i = 0;
@@ -279,7 +277,7 @@ void calculateSheepPosition(HWND hwnd)
     {
         player1.isRight = false;
         if (player1.x >= 0)
-            player1.x -= 10;
+            player1.x -= 1;
         if (++player1.i > 3)
         {
             player1.i = 0;
@@ -290,13 +288,12 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(0x57)) // VK_W
     {
         player2.isJumping = true;
-        player2.jumpTicks = GetTickCount();
     }
     if (isPressed(0x44)) // VK_D
     {
         player2.isRight = true;
         if (player2.x + player2.width <= WIDTH)
-            player2.x += 10;
+            player2.x += 1;
         if (++player2.i > 7)
         {
             player2.i = 0;
@@ -307,7 +304,7 @@ void calculateSheepPosition(HWND hwnd)
     {
         player2.isRight = false;
         if (player2.x >= 0)
-            player2.x -= 10;
+            player2.x -= 1;
         if (++player2.i > 3)
         {
             player2.i = 0;
@@ -320,49 +317,43 @@ void jumping()
 {
     if (player1.isJumping)
     {
-        if (player1.isFalling && player1.y == 100 && (player1.x >= player2.x - player2.height / 2 && player1.x <= player2.x + player2.height / 2))
+        if (player1.isFalling && player1.y == player2.height && (player1.x >= player2.x - player2.height / 2 && player1.x <= player2.x + player2.height / 2))
         {
             player1.isFalling = false;
             player1.isJumping = false;
-            player1.y = player2.height;
-            player1.jumpTicks = GetTickCount();
             return;
         }
 
-        if (player1.isFalling && player1.y == 50)
+        if (player1.isFalling && player1.y == 0)
         {
-            player1.y = 0;
             player1.isJumping = false;
             player1.isFalling = false;
         }
-        else if (player1.y == 200)
-        {
-            player1.y = 150;
-            player1.isFalling = true;
-        }
         else
-            player1.y += player1.isFalling ? -50 : 50;
+        {
+            if (player1.y == 100)
 
-        player1.jumpTicks = GetTickCount();
+                player1.isFalling = true;
+
+            player1.y += player1.isFalling ? -1 : 1;
+        }
     }
 
     if (player2.isJumping)
     {
-        if (player2.isFalling && player2.y == 50)
+        if (player2.isFalling && player2.y == 0)
         {
-            player2.y = 0;
             player2.isJumping = false;
             player2.isFalling = false;
         }
-        else if (player2.y == 200)
-        {
-            player2.y = 150;
-            player2.isFalling = true;
-        }
         else
-            player2.y += player2.isFalling ? -50 : 50;
+        {
+            if (player2.y == 100)
 
-        player2.jumpTicks = GetTickCount();
+                player2.isFalling = true;
+
+            player2.y += player2.isFalling ? -1 : 1;
+        }
     }
 }
 
