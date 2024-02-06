@@ -8,7 +8,9 @@
 #include <windows.h>
 #include <iostream>
 #include <thread>
+#include <algorithm>
 #include <random>
+#include <vector>
 #include "resources.h"
 
 #define WIDTH 1000
@@ -22,7 +24,6 @@ void draw(HWND);
 void calculateSheepPosition(HWND);
 void calculateBirdPosition(HWND);
 void calculateWolfPosition(HWND);
-void jumping();
 void loadBitmaps();
 void deleteBitmaps();
 void setDefaults();
@@ -31,11 +32,28 @@ INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM 
 class Object
 {
 public:
+    Object() = default;
+    Object(int w, int h, int x, int y) : width{w}, height{h}, x{x}, y{x} {}
     int width;
     int height;
     int x;
     int y;
 };
+
+vector<Object *> filterObjects(const vector<Object *> &other, Object *obj)
+{
+
+    // Filter condition
+    auto condition = [&](Object *o)
+    { return obj->y == o->y + o->height && obj->x + obj->width > o->x && obj->x < o->x + o->width && o != obj; };
+
+    // New vector to store filtered elements
+    std::vector<Object *> filteredVector;
+
+    // Filter the original vector
+    std::copy_if(other.begin(), other.end(), std::back_inserter(filteredVector), condition);
+    return filteredVector;
+}
 
 class Player : public Object
 {
@@ -46,14 +64,19 @@ public:
     int j;
     bool isRight;
     bool isFalling;
+    int initY;
+    void jumping();
 };
 
 Player player1;
 Player player2;
+Object platform(WIDTH, 0, 0, 0);
+
+vector<Object *> objects = vector<Object *>();
 
 bool gameOver = false;
 
-int introInitHeight = 500;
+int introInitHeight = 530;
 
 HBITMAP bk, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack;
 HBITMAP player2WR, player2WL, player2BR, player2BL;
@@ -129,10 +152,12 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
             continue;
         }
         calculateSheepPosition(hwnd);
-        if (player1.isJumping || player2.isJumping)
-        {
-            jumping();
-        }
+        if (player1.isJumping)
+
+            player1.jumping();
+
+        if (player2.isJumping)
+            player2.jumping();
         draw(hwnd);
         // isGameOver(hwnd);
         // Sleep(40);
@@ -201,18 +226,18 @@ void draw(HWND hwnd)
     GetObject(player1White, sizeof(BITMAP), &bm);
     player1.width = bm.bmWidth / 8;
     player1.height = bm.bmHeight / 2;
-    BitBlt(hdcMem, player1.x, introInitHeight - player1.height + 30 - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCAND);
+    BitBlt(hdcMem, player1.x, introInitHeight - player1.height - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCAND);
     SelectObject(hdcTmp, player1Black);
-    BitBlt(hdcMem, player1.x, introInitHeight - player1.height + 30 - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCPAINT);
+    BitBlt(hdcMem, player1.x, introInitHeight - player1.height - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCPAINT);
 
     // player2
     SelectObject(hdcTmp, player2White);
     GetObject(player2White, sizeof(BITMAP), &bm);
     player2.width = bm.bmWidth / 8;
     player2.height = bm.bmHeight / 2;
-    BitBlt(hdcMem, player2.x, introInitHeight - player2.height + 30 - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCAND);
+    BitBlt(hdcMem, player2.x, introInitHeight - player2.height - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCAND);
     SelectObject(hdcTmp, player2Black);
-    BitBlt(hdcMem, player2.x, introInitHeight - player2.height + 30 - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCPAINT);
+    BitBlt(hdcMem, player2.x, introInitHeight - player2.height - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCPAINT);
 
     GetObject(hbmMem, sizeof(BITMAP), &bm);
     BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
@@ -313,47 +338,31 @@ void calculateSheepPosition(HWND hwnd)
     }
 }
 
-void jumping()
+void Player::jumping()
 {
-    if (player1.isJumping)
+    auto tmp = filterObjects(objects, this);
+    std::sort(tmp.begin(), tmp.end(), [](Object *a, Object *b)
+              { return a->y > b->y; });
+    cout << "tmp size:" << tmp.size() << " y:" << this->y << endl;
+    if (!tmp.empty() && this->isFalling)
     {
-        if (player1.isFalling && player1.y == player2.height && (player1.x >= player2.x - player2.height / 2 && player1.x <= player2.x + player2.height / 2))
-        {
-            player1.isFalling = false;
-            player1.isJumping = false;
-            return;
-        }
-
-        if (player1.isFalling && player1.y == 0)
-        {
-            player1.isJumping = false;
-            player1.isFalling = false;
-        }
-        else
-        {
-            if (player1.y == 100)
-
-                player1.isFalling = true;
-
-            player1.y += player1.isFalling ? -1 : 1;
-        }
+        this->initY = this->y = tmp.front()->y + tmp.front()->height;
+        this->isFalling = false;
+        this->isJumping = false;
+        return;
     }
-
-    if (player2.isJumping)
+    // if (this->isFalling && this->y == this->initY)
+    // {
+    //     this->isJumping = false;
+    //     this->isFalling = false;
+    // }
+    else
     {
-        if (player2.isFalling && player2.y == 0)
-        {
-            player2.isJumping = false;
-            player2.isFalling = false;
-        }
-        else
-        {
-            if (player2.y == 100)
+        if (this->y == this->initY + 100)
 
-                player2.isFalling = true;
+            this->isFalling = true;
 
-            player2.y += player2.isFalling ? -1 : 1;
-        }
+        this->y += this->isFalling ? -1 : 1;
     }
 }
 
@@ -399,6 +408,9 @@ void setDefaults()
 {
     player1.x = WIDTH / 2;
     player2.x = WIDTH / 6;
+    objects.push_back(&platform);
+    objects.push_back(&player1);
+    objects.push_back(&player2);
 }
 
 INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
