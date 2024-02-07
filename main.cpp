@@ -76,6 +76,7 @@ public:
 Player player1;
 Player player2;
 Object platform(WIDTH, 0, 0, 0);
+Object boxObj;
 
 vector<Object *> objects = vector<Object *>();
 
@@ -83,7 +84,7 @@ bool gameOver = false;
 
 int introInitHeight = 530;
 
-HBITMAP bk, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack;
+HBITMAP bk, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack, box;
 HBITMAP player2WR, player2WL, player2BR, player2BL;
 
 /*  Declare Windows procedure  */
@@ -244,6 +245,14 @@ void draw(HWND hwnd)
     SelectObject(hdcTmp, player2Black);
     BitBlt(hdcMem, player2.x, introInitHeight - player2.height - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, 0, SRCPAINT);
 
+    // box
+
+    SelectObject(hdcTmp, box);
+    GetObject(box, sizeof(BITMAP), &bm);
+    boxObj.width = bm.bmWidth;
+    boxObj.height = bm.bmHeight;
+    BitBlt(hdcMem, boxObj.x, introInitHeight - boxObj.height - boxObj.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
+
     GetObject(hbmMem, sizeof(BITMAP), &bm);
     BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
 
@@ -352,7 +361,7 @@ void Player::jumping()
               { return a->y > b->y; });
     if (!tmp.empty() && this->isFalling)
     {
-        this->initY = this->y = tmp.front()->isPlayer ? tmp.front()->y + tmp.front()->height : tmp.front()->y + tmp.front()->height;
+        this->initY = this->y = tmp.front()->y + tmp.front()->height;
         this->isFalling = false;
         this->isJumping = false;
     }
@@ -361,19 +370,19 @@ void Player::jumping()
     //     this->isJumping = false;
     //     this->isFalling = false;
     // }
-    else
-    {
-        if (this->y == this->initY + 100)
 
-            this->isFalling = true;
+    if (this->y == this->initY + 100)
 
-        this->y += this->isFalling ? -1 : 1;
-    }
+        this->isFalling = true;
+
+    this->y += this->isFalling ? -1 : 1;
 }
 
 void loadBitmaps()
 {
     bk = (HBITMAP)LoadImage(NULL, "assets/introBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    box = (HBITMAP)LoadImage(NULL, "assets/box.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
     bkGameOver = (HBITMAP)LoadImage(NULL, "assets/gameOver.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     titleWhite = (HBITMAP)LoadImage(NULL, "assets/titleWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -397,6 +406,7 @@ void deleteBitmaps()
 {
 
     DeleteObject(bk);
+    DeleteObject(box);
     DeleteObject(bkGameOver);
     DeleteObject(player1WR);
     DeleteObject(player1WL);
@@ -413,9 +423,11 @@ void setDefaults()
 {
     player1.x = WIDTH / 2;
     player2.x = WIDTH / 6;
+    boxObj.x = WIDTH / 2;
     objects.push_back(&platform);
     objects.push_back(&player1);
     objects.push_back(&player2);
+    objects.push_back(&boxObj);
 }
 
 bool shouldFall(Object *obj)
