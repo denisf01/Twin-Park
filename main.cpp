@@ -78,7 +78,9 @@ Player player1;
 Player player2;
 Object platform(WIDTH, 0, 0, 0);
 Object leftPlt(WIDTH / 3 - 30, 0, 0, 0);
-Object rightPlt(WIDTH, 0, WIDTH / 2 + 200, 0);
+Object rightPlt(WIDTH, 0, WIDTH / 2 + 165, 0);
+Object rightWall(70, HEIGHT, WIDTH - 70, HEIGHT);
+Object leftWall(70, HEIGHT, 0, HEIGHT);
 Object boxObj;
 
 vector<Object *> objects = vector<Object *>();
@@ -280,7 +282,7 @@ void draw(HWND hwnd)
 
     SelectObject(hdcTmp, platform2);
     GetObject(platform2, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, WIDTH - bm.bmWidth - 70, 100, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+    BitBlt(hdcMem, WIDTH - bm.bmWidth - 70, 200, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
 
     GetObject(hbmMem, sizeof(BITMAP), &bm);
     BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
@@ -338,7 +340,7 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(VK_RIGHT))
     {
         player1.isRight = true;
-        if (player1.x + player1.width <= WIDTH && !isBlocked(&player1, true))
+        if (player1.x + player1.width <= WIDTH && !isBlocked(&player1, player1.isRight))
             player1.x += 1;
         if (++player1.i > 16)
         {
@@ -348,7 +350,7 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(VK_LEFT))
     {
         player1.isRight = false;
-        if (player1.x >= 0)
+        if (player1.x >= 0 && !isBlocked(&player1, player1.isRight))
             player1.x -= 1;
         if (++player1.i > 16)
         {
@@ -363,7 +365,7 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(0x44)) // VK_D
     {
         player2.isRight = true;
-        if (player2.x + player2.width <= WIDTH)
+        if (player2.x + player2.width <= WIDTH && !isBlocked(&player2, player2.isRight))
             player2.x += 1;
         if (++player2.i > 16)
         {
@@ -373,7 +375,7 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(0x41)) // VK_A
     {
         player2.isRight = false;
-        if (player2.x >= 0)
+        if (player2.x >= 0 && !isBlocked(&player2, player2.isRight))
             player2.x -= 1;
         if (++player2.i > 16)
         {
@@ -462,9 +464,12 @@ void setDefaults()
     // objects.push_back(&platform);
     objects.push_back(&leftPlt);
     objects.push_back(&rightPlt);
+    objects.push_back(&rightWall);
+    objects.push_back(&leftWall);
 
     objects.push_back(&player1);
     objects.push_back(&player2);
+
     // objects.push_back(&boxObj);
 }
 
@@ -480,6 +485,13 @@ bool isBlocked(Object *p, bool isRight)
         for (auto obj : objects)
         {
             if (p->x + p->width == obj->x && !obj->isPlayer && p->y < obj->y + obj->height)
+                return true;
+        }
+        return false;
+    }else{
+        for (auto obj : objects)
+        {
+            if (p->x == obj->x + obj -> width && !obj->isPlayer && p->y < obj->y + obj->height)
                 return true;
         }
         return false;
