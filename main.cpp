@@ -57,6 +57,7 @@ vector<Object *> filterObjects(const vector<Object *> &other, Object *obj)
 }
 
 bool shouldFall(Object *obj);
+bool isBlocked(Object *obj, bool);
 
 class Player : public Object
 {
@@ -309,7 +310,7 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(VK_RIGHT))
     {
         player1.isRight = true;
-        if (player1.x + player1.width <= WIDTH)
+        if (player1.x + player1.width <= WIDTH && !isBlocked(&player1, true))
             player1.x += 1;
         if (++player1.i > 16)
         {
@@ -336,10 +337,9 @@ void calculateSheepPosition(HWND hwnd)
         player2.isRight = true;
         if (player2.x + player2.width <= WIDTH)
             player2.x += 1;
-        if (++player2.i > 7)
+        if (++player2.i > 16)
         {
             player2.i = 0;
-           
         }
     }
     if (isPressed(0x41)) // VK_A
@@ -347,10 +347,10 @@ void calculateSheepPosition(HWND hwnd)
         player2.isRight = false;
         if (player2.x >= 0)
             player2.x -= 1;
-        if (++player2.i > 3)
+        if (++player2.i > 16)
         {
             player2.i = 0;
-                   }
+        }
     }
 }
 
@@ -433,6 +433,23 @@ void setDefaults()
 bool shouldFall(Object *obj)
 {
     return filterObjects(objects, obj).empty();
+}
+
+bool isBlocked(Object *p, bool isRight)
+{
+    if (isRight)
+    {
+        for (auto obj : objects)
+        {
+            if (p->x + p->width == obj->x && !obj->isPlayer && p->y < obj->y + obj->height)
+                return true;
+            else
+            {
+                cout << "y: " << p->y << " " << obj->y + obj->height;
+            }
+        }
+        return false;
+    }
 }
 
 INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
