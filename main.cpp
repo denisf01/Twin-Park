@@ -87,6 +87,7 @@ int introInitHeight = 530;
 
 HBITMAP bk, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack, box;
 HBITMAP player2WR, player2WL, player2BR, player2BL;
+HBITMAP plt;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -212,6 +213,12 @@ void draw(HWND hwnd)
     tmp2 = (HBITMAP)SelectObject(hdcTmp, background);
     GetObject(background, sizeof(BITMAP), &bm);
     StretchBlt(hdcMem, 0, 0, WIDTH, HEIGHT, hdcTmp, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+
+    //platform
+    SelectObject(hdcTmp, plt);
+    GetObject(plt, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, -30, HEIGHT - 170, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+   
 
     // title
     SelectObject(hdcTmp, titleWhite);
@@ -381,6 +388,7 @@ void Player::jumping()
 void loadBitmaps()
 {
     bk = (HBITMAP)LoadImage(NULL, "assets/introBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    plt = (HBITMAP)LoadImage(NULL, "assets/platform.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     box = (HBITMAP)LoadImage(NULL, "assets/box.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     bkGameOver = (HBITMAP)LoadImage(NULL, "assets/gameOver.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
