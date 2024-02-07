@@ -85,9 +85,9 @@ bool gameOver = false;
 
 int introInitHeight = 530;
 
-HBITMAP bk, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack, box;
+HBITMAP bk, bk2, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack, box;
 HBITMAP player2WR, player2WL, player2BR, player2BL;
-HBITMAP plt;
+HBITMAP wall, platform2, plt;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -197,7 +197,7 @@ void draw(HWND hwnd)
         return;
     }
 
-    background = bk;
+    background = bk2;
     player1White = player1.isRight ? player1WR : player1WL;
     player1Black = player1.isRight ? player1BR : player1BL;
 
@@ -221,19 +221,19 @@ void draw(HWND hwnd)
    
 
     // title
-    SelectObject(hdcTmp, titleWhite);
-    GetObject(titleWhite, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 10, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
-    SelectObject(hdcTmp, titleBlack);
-    BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 10, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+    // SelectObject(hdcTmp, titleWhite);
+    // GetObject(titleWhite, sizeof(BITMAP), &bm);
+    // BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 10, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+    // SelectObject(hdcTmp, titleBlack);
+    // BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 10, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
 
     // start button
 
-    SelectObject(hdcTmp, startWhite);
-    GetObject(startWhite, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
-    SelectObject(hdcTmp, startBlack);
-    BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+    // SelectObject(hdcTmp, startWhite);
+    // GetObject(startWhite, sizeof(BITMAP), &bm);
+    // BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+    // SelectObject(hdcTmp, startBlack);
+    // BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
 
     // player1
     SelectObject(hdcTmp, player1White);
@@ -260,6 +260,19 @@ void draw(HWND hwnd)
     boxObj.width = bm.bmWidth;
     boxObj.height = bm.bmHeight;
     BitBlt(hdcMem, boxObj.x, introInitHeight - boxObj.height - boxObj.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
+
+    // wall
+
+    SelectObject(hdcTmp, wall);
+    GetObject(wall, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, -5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+    BitBlt(hdcMem, WIDTH - bm.bmWidth - 5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+
+    // upper platform
+
+    SelectObject(hdcTmp, platform2);
+    GetObject(platform2, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, WIDTH - bm.bmWidth - 70, 100, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
 
     GetObject(hbmMem, sizeof(BITMAP), &bm);
     BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
@@ -389,6 +402,10 @@ void loadBitmaps()
 {
     bk = (HBITMAP)LoadImage(NULL, "assets/introBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     plt = (HBITMAP)LoadImage(NULL, "assets/platform.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    bk2 = (HBITMAP)LoadImage(NULL, "assets/levelOneBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    wall = (HBITMAP)LoadImage(NULL, "assets/wall.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    platform2 = (HBITMAP)LoadImage(NULL, "assets/platform2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
     box = (HBITMAP)LoadImage(NULL, "assets/box.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     bkGameOver = (HBITMAP)LoadImage(NULL, "assets/gameOver.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -451,10 +468,6 @@ bool isBlocked(Object *p, bool isRight)
         {
             if (p->x + p->width == obj->x && !obj->isPlayer && p->y < obj->y + obj->height)
                 return true;
-            else
-            {
-                cout << "y: " << p->y << " " << obj->y + obj->height;
-            }
         }
         return false;
     }
