@@ -38,6 +38,7 @@ public:
     int height;
     int x;
     int y;
+    bool isPlayer = false;
 };
 
 vector<Object *> filterObjects(const vector<Object *> &other, Object *obj)
@@ -55,10 +56,15 @@ vector<Object *> filterObjects(const vector<Object *> &other, Object *obj)
     return filteredVector;
 }
 
+bool shouldFall(Object *obj);
+
 class Player : public Object
 {
 public:
-    Player() : Object(), isJumping{false}, isRight{true}, isFalling{false} {}
+    Player() : Object(), isJumping{false}, isRight{true}, isFalling{false}
+    {
+        isPlayer = true;
+    }
     bool isJumping;
     int i;
     int j;
@@ -282,6 +288,11 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 
 void calculateSheepPosition(HWND hwnd)
 {
+    if (shouldFall(&player1) && !player1.isJumping)
+        player1.y--;
+    if (shouldFall(&player2) && !player2.isJumping)
+        player2.y--;
+
     if (isPressed(VK_UP))
     {
 
@@ -343,13 +354,11 @@ void Player::jumping()
     auto tmp = filterObjects(objects, this);
     std::sort(tmp.begin(), tmp.end(), [](Object *a, Object *b)
               { return a->y > b->y; });
-    cout << "tmp size:" << tmp.size() << " y:" << this->y << endl;
     if (!tmp.empty() && this->isFalling)
     {
-        this->initY = this->y = tmp.front()->y + tmp.front()->height;
+        this->initY = this->y = tmp.front()->isPlayer ? tmp.front()->y + tmp.front()->height : tmp.front()->y + tmp.front()->height;
         this->isFalling = false;
         this->isJumping = false;
-        return;
     }
     // if (this->isFalling && this->y == this->initY)
     // {
@@ -411,6 +420,11 @@ void setDefaults()
     objects.push_back(&platform);
     objects.push_back(&player1);
     objects.push_back(&player2);
+}
+
+bool shouldFall(Object *obj)
+{
+    return filterObjects(objects, obj).empty();
 }
 
 INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
