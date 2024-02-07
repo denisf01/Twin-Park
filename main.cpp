@@ -33,7 +33,7 @@ class Object
 {
 public:
     Object() = default;
-    Object(int w, int h, int x, int y) : width{w}, height{h}, x{x}, y{x} {}
+    Object(int w, int h, int x, int y) : width{w}, height{h}, x{x}, y{y} {}
     int width;
     int height;
     int x;
@@ -77,6 +77,8 @@ public:
 Player player1;
 Player player2;
 Object platform(WIDTH, 0, 0, 0);
+Object leftPlt(WIDTH / 3 - 30, 0, 0, 0);
+Object rightPlt(WIDTH, 0, WIDTH / 2 + 200, 0);
 Object boxObj;
 
 vector<Object *> objects = vector<Object *>();
@@ -87,7 +89,7 @@ int introInitHeight = 530;
 
 HBITMAP bk, bk2, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack, box;
 HBITMAP player2WR, player2WL, player2BR, player2BL;
-HBITMAP wall, platform2, plt;
+HBITMAP wall, platform2, plt, plt2;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -214,11 +216,17 @@ void draw(HWND hwnd)
     GetObject(background, sizeof(BITMAP), &bm);
     StretchBlt(hdcMem, 0, 0, WIDTH, HEIGHT, hdcTmp, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
 
-    //platform
+    // platform
+    // SelectObject(hdcTmp, plt);
+    // GetObject(plt, sizeof(BITMAP), &bm);
+    // BitBlt(hdcMem, -30, HEIGHT - 170, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+
+    // platform with hole
+
     SelectObject(hdcTmp, plt);
     GetObject(plt, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, -30, HEIGHT - 170, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
-   
+    BitBlt(hdcMem, -30, HEIGHT - 170, bm.bmWidth / 5, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+    BitBlt(hdcMem, bm.bmWidth / 5 + 300, HEIGHT - 170, bm.bmWidth / 2, bm.bmHeight, hdcTmp, 100, 0, SRCCOPY);
 
     // title
     // SelectObject(hdcTmp, titleWhite);
@@ -255,11 +263,11 @@ void draw(HWND hwnd)
 
     // box
 
-    SelectObject(hdcTmp, box);
-    GetObject(box, sizeof(BITMAP), &bm);
-    boxObj.width = bm.bmWidth;
-    boxObj.height = bm.bmHeight;
-    BitBlt(hdcMem, boxObj.x, introInitHeight - boxObj.height - boxObj.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
+    // SelectObject(hdcTmp, box);
+    // GetObject(box, sizeof(BITMAP), &bm);
+    // boxObj.width = bm.bmWidth;
+    // boxObj.height = bm.bmHeight;
+    // BitBlt(hdcMem, boxObj.x, introInitHeight - boxObj.height - boxObj.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
 
     // wall
 
@@ -402,6 +410,8 @@ void loadBitmaps()
 {
     bk = (HBITMAP)LoadImage(NULL, "assets/introBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     plt = (HBITMAP)LoadImage(NULL, "assets/platform.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    plt2 = (HBITMAP)LoadImage(NULL, "assets/platformHole.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
     bk2 = (HBITMAP)LoadImage(NULL, "assets/levelOneBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     wall = (HBITMAP)LoadImage(NULL, "assets/wall.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     platform2 = (HBITMAP)LoadImage(NULL, "assets/platform2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -446,13 +456,16 @@ void deleteBitmaps()
 
 void setDefaults()
 {
-    player1.x = WIDTH / 2;
+    player1.x = WIDTH - 200;
     player2.x = WIDTH / 6;
     boxObj.x = WIDTH / 2;
-    objects.push_back(&platform);
+    // objects.push_back(&platform);
+    objects.push_back(&leftPlt);
+    objects.push_back(&rightPlt);
+
     objects.push_back(&player1);
     objects.push_back(&player2);
-    objects.push_back(&boxObj);
+    // objects.push_back(&boxObj);
 }
 
 bool shouldFall(Object *obj)
