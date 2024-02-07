@@ -67,7 +67,6 @@ public:
     }
     bool isJumping;
     int i;
-    int j;
     bool isRight;
     bool isFalling;
     int initY;
@@ -231,20 +230,20 @@ void draw(HWND hwnd)
     // player1
     SelectObject(hdcTmp, player1White);
     GetObject(player1White, sizeof(BITMAP), &bm);
-    player1.width = bm.bmWidth / 8;
-    player1.height = bm.bmHeight / 2;
-    BitBlt(hdcMem, player1.x, introInitHeight - player1.height - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCAND);
+    player1.width = bm.bmWidth / 17;
+    player1.height = bm.bmHeight;
+    BitBlt(hdcMem, player1.x, introInitHeight - player1.height - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, 0, SRCAND);
     SelectObject(hdcTmp, player1Black);
-    BitBlt(hdcMem, player1.x, introInitHeight - player1.height - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, player1.j * player1.height, SRCPAINT);
+    BitBlt(hdcMem, player1.x, introInitHeight - player1.height - player1.y, player1.width, player1.height, hdcTmp, player1.i * player1.width, 0, SRCPAINT);
 
     // player2
     SelectObject(hdcTmp, player2White);
     GetObject(player2White, sizeof(BITMAP), &bm);
-    player2.width = bm.bmWidth / 8;
-    player2.height = bm.bmHeight / 2;
-    BitBlt(hdcMem, player2.x, introInitHeight - player2.height - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCAND);
+    player2.width = bm.bmWidth / 17;
+    player2.height = bm.bmHeight;
+    BitBlt(hdcMem, player2.x, introInitHeight - player2.height - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, 0, SRCAND);
     SelectObject(hdcTmp, player2Black);
-    BitBlt(hdcMem, player2.x, introInitHeight - player2.height - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, player2.j * player2.height, SRCPAINT);
+    BitBlt(hdcMem, player2.x, introInitHeight - player2.height - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, 0, SRCPAINT);
 
     // box
 
@@ -312,10 +311,9 @@ void calculateSheepPosition(HWND hwnd)
         player1.isRight = true;
         if (player1.x + player1.width <= WIDTH)
             player1.x += 1;
-        if (++player1.i > 7)
+        if (++player1.i > 16)
         {
             player1.i = 0;
-            ++player1.j %= 2;
         }
     }
     if (isPressed(VK_LEFT))
@@ -323,10 +321,9 @@ void calculateSheepPosition(HWND hwnd)
         player1.isRight = false;
         if (player1.x >= 0)
             player1.x -= 1;
-        if (++player1.i > 3)
+        if (++player1.i > 16)
         {
             player1.i = 0;
-            ++player1.j %= 2;
         }
     }
 
@@ -342,7 +339,7 @@ void calculateSheepPosition(HWND hwnd)
         if (++player2.i > 7)
         {
             player2.i = 0;
-            ++player2.j %= 2;
+           
         }
     }
     if (isPressed(0x41)) // VK_A
@@ -353,8 +350,7 @@ void calculateSheepPosition(HWND hwnd)
         if (++player2.i > 3)
         {
             player2.i = 0;
-            ++player2.j %= 2;
-        }
+                   }
     }
 }
 
