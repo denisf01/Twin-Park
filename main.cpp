@@ -19,6 +19,8 @@
 
 using namespace std;
 
+string teamName = "";
+
 void isGameOver(HWND);
 void draw(HWND);
 void calculateSheepPosition(HWND);
@@ -27,7 +29,9 @@ void calculateWolfPosition(HWND);
 void loadBitmaps();
 void deleteBitmaps();
 void setDefaults();
+void setLevel(int);
 INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK DlgProcLeaderboard(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 class Object
 {
@@ -58,6 +62,8 @@ vector<Object *> filterObjects(const vector<Object *> &other, Object *obj)
 
 bool shouldFall(Object *obj);
 bool isBlocked(Object *obj, bool);
+void checkStart(HWND);
+void checkLeaderboard(HWND);
 
 class Player : public Object
 {
@@ -102,7 +108,7 @@ int introInitHeight = 530;
 HBITMAP bk, bk2, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack, box;
 HBITMAP player2WR, player2WL, player2BR, player2BL;
 HBITMAP wall, platform2, plt, plt2, portalW, portalB, doorW, doorB, buttonUpW, buttonUpB, buttonDownW, buttonDownB;
-HBITMAP buttonW1, buttonB1, buttonW2, buttonB2;
+HBITMAP buttonW1, buttonB1, buttonW2, buttonB2, leaderboardW, leaderboardB;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -212,7 +218,7 @@ void draw(HWND hwnd)
         return;
     }
 
-    background = bk2;
+    background = bk;
     player1White = player1.isRight ? player1WR : player1WL;
     player1Black = player1.isRight ? player1BR : player1BL;
 
@@ -229,67 +235,105 @@ void draw(HWND hwnd)
     GetObject(background, sizeof(BITMAP), &bm);
     StretchBlt(hdcMem, 0, 0, WIDTH, HEIGHT, hdcTmp, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
 
-    // portal
+    if (level == 0)
+    {
 
-    SelectObject(hdcTmp, portalW);
-    GetObject(portalW, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, 75, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
-    BitBlt(hdcMem, WIDTH - 180, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        // title
+        SelectObject(hdcTmp, titleWhite);
+        GetObject(titleWhite, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 10, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, titleBlack);
+        BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 10, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
 
-    SelectObject(hdcTmp, portalB);
-    BitBlt(hdcMem, 75, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
-    BitBlt(hdcMem, WIDTH - 180, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        // start button
 
-    // buttons
-    SelectObject(hdcTmp, buttonW1);
-    GetObject(buttonW1, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, WIDTH - 300, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
-    SelectObject(hdcTmp, buttonW2);
-    GetObject(buttonW2, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, WIDTH / 2, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, startWhite);
+        GetObject(startWhite, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH / 3 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, startBlack);
+        BitBlt(hdcMem, WIDTH / 3 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
 
-    SelectObject(hdcTmp, buttonB1);
-    GetObject(buttonB1, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, WIDTH - 300, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
-    SelectObject(hdcTmp, buttonB2);
-    GetObject(buttonB2, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, WIDTH / 2, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        // leaderboard button
 
-    // platform
-    // SelectObject(hdcTmp, plt);
-    // GetObject(plt, sizeof(BITMAP), &bm);
-    // BitBlt(hdcMem, -30, HEIGHT - 170, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+        SelectObject(hdcTmp, leaderboardW);
+        GetObject(leaderboardW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, 2 * WIDTH / 3 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, leaderboardB);
+        BitBlt(hdcMem, 2 * WIDTH / 3 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+    }
+    else
+    {
 
-    // platform with hole
+        // //   platform
+        // SelectObject(hdcTmp, plt);
+        // GetObject(plt, sizeof(BITMAP), &bm);
+        // BitBlt(hdcMem, -30, HEIGHT - 170, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
 
-    SelectObject(hdcTmp, plt);
-    GetObject(plt, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, leftPlt.x, HEIGHT - 170, leftPlt.width, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
-    BitBlt(hdcMem, rightPlt.x, HEIGHT - 170, bm.bmWidth / 2, bm.bmHeight, hdcTmp, 100, 0, SRCCOPY);
+        // portal
 
-    // door
-    SelectObject(hdcTmp, doorW);
-    GetObject(doorW, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, WIDTH - 180, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, portalW);
+        GetObject(portalW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, 75, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        BitBlt(hdcMem, WIDTH - 180, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
 
-    SelectObject(hdcTmp, doorB);
-    BitBlt(hdcMem, WIDTH - 180, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        SelectObject(hdcTmp, portalB);
+        BitBlt(hdcMem, 75, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        BitBlt(hdcMem, WIDTH - 180, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
 
-    // title
-    // SelectObject(hdcTmp, titleWhite);
-    // GetObject(titleWhite, sizeof(BITMAP), &bm);
-    // BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 10, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
-    // SelectObject(hdcTmp, titleBlack);
-    // BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 10, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        // buttons
+        SelectObject(hdcTmp, buttonW1);
+        GetObject(buttonW1, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH - 300, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, buttonW2);
+        GetObject(buttonW2, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH / 2, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
 
-    // start button
+        SelectObject(hdcTmp, buttonB1);
+        GetObject(buttonB1, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH - 300, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        SelectObject(hdcTmp, buttonB2);
+        GetObject(buttonB2, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH / 2, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
 
-    // SelectObject(hdcTmp, startWhite);
-    // GetObject(startWhite, sizeof(BITMAP), &bm);
-    // BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
-    // SelectObject(hdcTmp, startBlack);
-    // BitBlt(hdcMem, WIDTH / 2 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        // platform with hole
 
+        SelectObject(hdcTmp, plt);
+        GetObject(plt, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, leftPlt.x, HEIGHT - 170, leftPlt.width, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, rightPlt.x, HEIGHT - 170, bm.bmWidth / 2, bm.bmHeight, hdcTmp, 100, 0, SRCCOPY);
+
+        // door
+        SelectObject(hdcTmp, doorW);
+        GetObject(doorW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH - 180, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+
+        SelectObject(hdcTmp, doorB);
+        BitBlt(hdcMem, WIDTH - 180, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+
+        // box
+
+        // SelectObject(hdcTmp, box);
+        // GetObject(box, sizeof(BITMAP), &bm);
+        // boxObj.width = bm.bmWidth;
+        // boxObj.height = bm.bmHeight;
+        // BitBlt(hdcMem, boxObj.x, introInitHeight - boxObj.height - boxObj.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
+
+        // wall
+
+        SelectObject(hdcTmp, wall);
+        GetObject(wall, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, -5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, WIDTH - bm.bmWidth - 5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+
+        // upper platform
+
+        SelectObject(hdcTmp, platform2);
+        GetObject(platform2, sizeof(BITMAP), &bm);
+        upperPlatform.width = bm.bmWidth;
+        upperPlatform.height = bm.bmHeight;
+        upperPlatform.x = WIDTH - upperPlatform.width - 70;
+        BitBlt(hdcMem, WIDTH - upperPlatform.width - 70, introInitHeight - upperPlatform.height - upperPlatform.y, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+    }
     // player1
     SelectObject(hdcTmp, player1White);
     GetObject(player1White, sizeof(BITMAP), &bm);
@@ -307,30 +351,6 @@ void draw(HWND hwnd)
     BitBlt(hdcMem, player2.x, introInitHeight - player2.height - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, 0, SRCAND);
     SelectObject(hdcTmp, player2Black);
     BitBlt(hdcMem, player2.x, introInitHeight - player2.height - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, 0, SRCPAINT);
-
-    // box
-
-    // SelectObject(hdcTmp, box);
-    // GetObject(box, sizeof(BITMAP), &bm);
-    // boxObj.width = bm.bmWidth;
-    // boxObj.height = bm.bmHeight;
-    // BitBlt(hdcMem, boxObj.x, introInitHeight - boxObj.height - boxObj.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
-
-    // wall
-
-    SelectObject(hdcTmp, wall);
-    GetObject(wall, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, -5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
-    BitBlt(hdcMem, WIDTH - bm.bmWidth - 5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
-
-    // upper platform
-
-    SelectObject(hdcTmp, platform2);
-    GetObject(platform2, sizeof(BITMAP), &bm);
-    upperPlatform.width = bm.bmWidth;
-    upperPlatform.height = bm.bmHeight;
-    upperPlatform.x = WIDTH - upperPlatform.width - 70;
-    BitBlt(hdcMem, WIDTH - upperPlatform.width - 70, introInitHeight - upperPlatform.height - upperPlatform.y, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
 
     GetObject(hbmMem, sizeof(BITMAP), &bm);
     BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
@@ -356,11 +376,15 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
         setDefaults();
         break;
     case WM_KEYUP:
+        if (gameOver)
+        {
+            gameOver = false;
+            objects.clear();
+            setDefaults();
+        }
         break;
     case WM_LBUTTONDOWN:
-        cout << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
-        gameOver = false;
-        DialogBox(NULL, MAKEINTRESOURCE(IDD_TEAM_NAME), hwnd, DlgProcTeamName);
+        // DialogBox(NULL, MAKEINTRESOURCE(IDD_TEAM_NAME), hwnd, DlgProcTeamName);
 
         break;
     case WM_DESTROY:
@@ -394,7 +418,7 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(VK_RIGHT))
     {
         player1.isRight = true;
-        if (player1.x + player1.width <= WIDTH - rightWall.width && !isBlocked(&player1, player1.isRight))
+        if (player1.x + player1.width <= WIDTH && !isBlocked(&player1, player1.isRight))
             player1.x += 1;
         if (++player1.i > 16)
         {
@@ -404,7 +428,7 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(VK_LEFT))
     {
         player1.isRight = false;
-        if (player1.x >= 0 + leftWall.width && !isBlocked(&player1, player1.isRight))
+        if (player1.x >= 0 && !isBlocked(&player1, player1.isRight))
             player1.x -= 1;
         if (++player1.i > 16)
         {
@@ -419,7 +443,7 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(0x44)) // VK_D
     {
         player2.isRight = true;
-        if (player2.x + player2.width <= WIDTH - rightWall.width && !isBlocked(&player2, player2.isRight))
+        if (player2.x + player2.width <= WIDTH && !isBlocked(&player2, player2.isRight))
             player2.x += 1;
         if (++player2.i > 16)
         {
@@ -429,17 +453,25 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(0x41)) // VK_A
     {
         player2.isRight = false;
-        if (player2.x >= 0 + leftWall.width && !isBlocked(&player2, player2.isRight))
+        if (player2.x >= 0 && !isBlocked(&player2, player2.isRight))
             player2.x -= 1;
         if (++player2.i > 16)
         {
             player2.i = 0;
         }
     }
-    checkPortal(&player1);
-    checkPortal(&player2);
-    checkButtons(&player1, &player2);
-    checkSuccess(&player1, &player2);
+    if (level == 1)
+    {
+        checkPortal(&player1);
+        checkPortal(&player2);
+        checkButtons(&player1, &player2);
+        checkSuccess(&player1, &player2);
+    }
+    if (level == 0)
+    {
+        checkStart(hwnd);
+        checkLeaderboard(hwnd);
+    }
 }
 
 void Player::jumping()
@@ -463,15 +495,18 @@ void Player::jumping()
     }
 }
 
-void checkSuccess(Player *p1, Player *p2){
-    if(p1 -> x >= WIDTH - 175 && p2 -> x >= WIDTH - 175 && p1 -> y == 0 && p2 -> y == 0 ){
+void checkSuccess(Player *p1, Player *p2)
+{
+    if (p1->x >= WIDTH - 175 && p2->x >= WIDTH - 175 && p1->y == 0 && p2->y == 0)
+    {
         cout << "Level completed" << endl;
     }
 }
 
-void checkGameover(Player *p1, Player *p2){
-    if (p1 -> y < -200 || p2 -> y < -200)
-          gameOver = true;
+void checkGameover(Player *p1, Player *p2)
+{
+    if (p1->y < -200 || p2->y < -200)
+        gameOver = true;
 }
 
 void checkPortal(Player *p)
@@ -543,6 +578,9 @@ void loadBitmaps()
     startWhite = (HBITMAP)LoadImage(NULL, "assets/startWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     startBlack = (HBITMAP)LoadImage(NULL, "assets/startBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
+    leaderboardW = (HBITMAP)LoadImage(NULL, "assets/leaderboardW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    leaderboardB = (HBITMAP)LoadImage(NULL, "assets/leaderboardB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
     player1WR = (HBITMAP)LoadImage(NULL, "assets/playerWR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     player1WL = (HBITMAP)LoadImage(NULL, "assets/playerWL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     player1BR = (HBITMAP)LoadImage(NULL, "assets/playerBR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -575,14 +613,19 @@ void setDefaults()
 {
     player1.x = WIDTH / 6 + 5;
     player2.x = WIDTH / 6;
+    player1.y = player1.initY = player2.y = player2.initY = 0;
     boxObj.x = WIDTH / 2;
     upperPlatform.y = 330;
-    // objects.push_back(&platform);
-    objects.push_back(&leftPlt);
-    objects.push_back(&rightPlt);
-    objects.push_back(&rightWall);
-    objects.push_back(&leftWall);
-    objects.push_back(&upperPlatform);
+    if (level == 0)
+        objects.push_back(&platform);
+    if (level == 1)
+    {
+        objects.push_back(&leftPlt);
+        objects.push_back(&rightPlt);
+        objects.push_back(&rightWall);
+        objects.push_back(&leftWall);
+        objects.push_back(&upperPlatform);
+    }
 
     objects.push_back(&player1);
     objects.push_back(&player2);
@@ -596,6 +639,23 @@ void setDefaults()
 bool shouldFall(Object *obj)
 {
     return filterObjects(objects, obj).empty();
+}
+
+void checkStart(HWND hwnd)
+{
+    if (player1.x > WIDTH / 3 - 50 && player1.x < WIDTH / 3 && player1.y == 150 && !player1.isFalling || player2.x > WIDTH / 3 - 30 && player2.x < WIDTH / 3 && player2.y == 150 && !player2.isFalling)
+    {
+        DialogBox(NULL, MAKEINTRESOURCE(IDD_TEAM_NAME), hwnd, DlgProcTeamName);
+    }
+    // WIDTH / 3 - bm.bmWidth / 2, HEIGHT / 3,
+}
+
+void checkLeaderboard(HWND hwnd)
+{
+    if (player1.x > 2 * WIDTH / 3 - 50 && player1.x < 2 * WIDTH / 3 && player1.y == 150 && !player1.isFalling || player2.x > 2 * WIDTH / 3 - 30 && player2.x < 2 * WIDTH / 3 && player2.y == 150 && !player2.isFalling)
+    {
+        DialogBox(NULL, MAKEINTRESOURCE(IDD_LEADERBOARD), hwnd, DlgProcLeaderboard);
+    }
 }
 
 bool isBlocked(Object *p, bool isRight)
@@ -620,6 +680,13 @@ bool isBlocked(Object *p, bool isRight)
     }
 }
 
+void setLevel(int l)
+{
+    level = l;
+    objects.clear();
+    setDefaults();
+}
+
 INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -642,6 +709,8 @@ INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM 
             //     break;
             // }
             cout << string(tempUnos);
+            teamName = string(tempUnos);
+            setLevel(1);
             EndDialog(hdlg, 0);
         }
         }
@@ -654,5 +723,86 @@ INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM 
     }
     default:
         return FALSE;
+    }
+}
+
+INT_PTR CALLBACK DlgProcLeaderboard(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    int status;
+    char *err = 0;
+    switch (message)
+    {
+
+    case WM_INITDIALOG:
+    {
+        // listHandle = GetDlgItem(hdlg, IDC_LISTA_STUDENATA);
+        // InitListViewColumns(listHandle);
+
+        return TRUE;
+    }
+    case WM_COMMAND:
+    {
+        switch (LOWORD(wParam))
+        {
+            // case SEARCH_ALL:
+            //     type = "all";
+            //     break;
+            // case SEARCH_IME:
+            //     type = "ime";
+            //     break;
+            // case SEARCH_PREZIME:
+            //     type = "prezime";
+            //     break;
+
+            // case IDC_SAVE:
+            // {
+            //     ListView_DeleteAllItems(listHandle);
+            //     sqlite3_open("studenti.db", &db);
+            //     int status;
+            //     char *err = 0;
+            //     char sql[200], tempUnos[50];
+            //     tempUnos[0] = 0;
+            //     GetWindowText(GetDlgItem(hdlg, SEARCH), tempUnos, sizeof(tempUnos));
+
+            //     if (tempUnos[0] == 0 && type != "all")
+            //     {
+            //         MessageBox(hdlg, "Potrebno je unijeti kriterij za pretragu", "Gre�ka", MB_OK | MB_ICONWARNING);
+            //         break;
+            //     }
+            //     if (type == "all")
+            //         sprintf(sql, "SELECT * FROM Studenti");
+            //     else if (type == "ime")
+            //         sprintf(sql, "SELECT * FROM Studenti WHERE ime = '%s'", tempUnos);
+            //     else
+            //         sprintf(sql, "SELECT * FROM Studenti WHERE prezime = '%s'", tempUnos);
+
+            //     status = sqlite3_exec(db, sql, callback, 0, &err);
+            //     if (status == SQLITE_OK)
+            //     {
+
+            //         sqlite3_free(err);
+            //         sqlite3_close(db);
+            //     }
+            //     else
+            //     {
+            //         MessageBox(hdlg, err, "Gre�ka", MB_OK);
+            //         sqlite3_free(err);
+            //         sqlite3_close(db);
+            //         EndDialog(hdlg, 0);
+            //         break;
+            //     }
+            //     break;
+            // }
+            // }
+            return TRUE;
+        }
+    case WM_CLOSE:
+    {
+        EndDialog(hdlg, 0);
+        return TRUE;
+    }
+    default:
+        return FALSE;
+    }
     }
 }
