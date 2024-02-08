@@ -228,11 +228,11 @@ void draw(HWND hwnd)
     }
 
     background = bk;
-    player1White = player1.isRight ? player1WR : player1WL;
-    player1Black = player1.isRight ? player1BR : player1BL;
+    player1White = player1.isRight ? player1WRBlue : player1WLBlue;
+    player1Black = player1.isRight ? player1BRBlue : player1BLBlue;
 
-    player2White = player2.isRight ? player2WR : player2WL;
-    player2Black = player2.isRight ? player2BR : player2BL;
+    player2White = player2.isRight ? player2WRBlue : player2WLBlue;
+    player2Black = player2.isRight ? player2BRBlue : player2BLBlue;
 
     hdcMem = CreateCompatibleDC(hdc);
     hbmMem = CreateCompatibleBitmap(hdc, WIDTH, HEIGHT);
@@ -342,15 +342,17 @@ void draw(HWND hwnd)
         upperPlatform.height = bm.bmHeight;
         upperPlatform.x = WIDTH - upperPlatform.width - 70;
         BitBlt(hdcMem, WIDTH - upperPlatform.width - 70, introInitHeight - upperPlatform.height - upperPlatform.y, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
-    }else{
+    }
+    else
+    {
 
         // platform with hole
         SelectObject(hdcTmp, plt);
         GetObject(plt, sizeof(BITMAP), &bm);
         BitBlt(hdcMem, leftPlt2.x, HEIGHT - 170, leftPlt2.width, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, rightPlt2.x, HEIGHT - 170, bm.bmWidth / 2, bm.bmHeight, hdcTmp, 100, 0, SRCCOPY);
-        
-         // door
+
+        // door
         SelectObject(hdcTmp, doorW);
         GetObject(doorW, sizeof(BITMAP), &bm);
         BitBlt(hdcMem, WIDTH - 180, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
@@ -363,7 +365,7 @@ void draw(HWND hwnd)
         GetObject(wall, sizeof(BITMAP), &bm);
         BitBlt(hdcMem, -5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, WIDTH - bm.bmWidth - 5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
-        
+
         // upper platform
 
         SelectObject(hdcTmp, platform2);
@@ -373,18 +375,20 @@ void draw(HWND hwnd)
         upperPlatform2.x = WIDTH - upperPlatform2.width - 70;
         BitBlt(hdcMem, WIDTH - upperPlatform2.width - 70, introInitHeight - upperPlatform2.height - upperPlatform2.y, bm.bmWidth - 200, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
 
-         // box
+        // box
 
         SelectObject(hdcTmp, box);
         GetObject(box, sizeof(BITMAP), &bm);
         boxObj.width = bm.bmWidth;
         boxObj.height = bm.bmHeight;
+        boxObj1.width = boxObj2.width = boxObj3.width = boxObj4.width = boxObj.width;
+        boxObj1.height = boxObj2.height = boxObj3.height = boxObj4.height = boxObj.height;
         BitBlt(hdcMem, boxObj.x, introInitHeight - boxObj.height - boxObj.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, boxObj1.x, introInitHeight - boxObj.height - boxObj1.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, boxObj2.x, introInitHeight - boxObj.height - boxObj2.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, boxObj3.x, introInitHeight - boxObj.height - boxObj3.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, boxObj4.x, introInitHeight - boxObj.height - boxObj4.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
-    
+
         // power
 
         SelectObject(hdcTmp, powerW);
@@ -662,8 +666,6 @@ void loadBitmaps()
 
     powerB = (HBITMAP)LoadImage(NULL, "assets/powerB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     powerW = (HBITMAP)LoadImage(NULL, "assets/powerW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-
-
 }
 
 void deleteBitmaps()
@@ -689,6 +691,7 @@ void setDefaults()
     player2.x = WIDTH / 6;
     player1.y = player1.initY = player2.y = player2.initY = 0;
     boxObj.x = WIDTH / 2;
+
     boxObj1.x = WIDTH / 2 - 70;
     boxObj2.x = WIDTH / 2 - 140;
     boxObj3.x = WIDTH / 2 - 210;
@@ -710,7 +713,8 @@ void setDefaults()
         objects.push_back(&leftWall);
         objects.push_back(&upperPlatform);
     }
-    if(level == 2){
+    if (level == 2)
+    {
         objects.push_back(&leftPlt2);
         objects.push_back(&rightPlt2);
         objects.push_back(&rightWall);
