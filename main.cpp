@@ -82,6 +82,7 @@ Object rightPlt(WIDTH, 0, WIDTH / 2 + 165, 0);
 Object rightWall(70, HEIGHT, WIDTH - 70, HEIGHT);
 Object leftWall(70, HEIGHT, 0, HEIGHT);
 Object boxObj;
+Object upperPlatform;
 
 vector<Object *> objects = vector<Object *>();
 
@@ -91,7 +92,7 @@ int introInitHeight = 530;
 
 HBITMAP bk, bk2, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack, box;
 HBITMAP player2WR, player2WL, player2BR, player2BL;
-HBITMAP wall, platform2, plt, plt2;
+HBITMAP wall, platform2, plt, plt2, portalW, portalB, doorW, doorB, buttonUpW, buttonUpB, buttonDownW, buttonDownB;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -218,6 +219,17 @@ void draw(HWND hwnd)
     GetObject(background, sizeof(BITMAP), &bm);
     StretchBlt(hdcMem, 0, 0, WIDTH, HEIGHT, hdcTmp, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
 
+    // portal
+
+    SelectObject(hdcTmp, portalW);
+    GetObject(portalW, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, 75, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+    BitBlt(hdcMem, WIDTH - 180, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+
+    SelectObject(hdcTmp, portalB);
+    BitBlt(hdcMem, 75, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+    BitBlt(hdcMem, WIDTH - 180, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+
     // platform
     // SelectObject(hdcTmp, plt);
     // GetObject(plt, sizeof(BITMAP), &bm);
@@ -282,7 +294,10 @@ void draw(HWND hwnd)
 
     SelectObject(hdcTmp, platform2);
     GetObject(platform2, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, WIDTH - bm.bmWidth - 70, 200, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+    upperPlatform.width = bm.bmWidth;
+    upperPlatform.height = bm.bmHeight;
+    upperPlatform.x = WIDTH - upperPlatform.width - 70;
+    BitBlt(hdcMem, WIDTH - upperPlatform.width - 70, introInitHeight - upperPlatform.height - upperPlatform.y, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
 
     GetObject(hbmMem, sizeof(BITMAP), &bm);
     BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
@@ -371,6 +386,12 @@ void calculateSheepPosition(HWND hwnd)
         {
             player2.i = 0;
         }
+        if (player2.x == 100 && player2.y == 0)
+        {
+            player2.x = WIDTH - 185;
+            player2.y = upperPlatform.y + 100;
+            player2.initY = upperPlatform.y + 100;
+        }
     }
     if (isPressed(0x41)) // VK_A
     {
@@ -400,12 +421,14 @@ void Player::jumping()
     //     this->isJumping = false;
     //     this->isFalling = false;
     // }
+    else
+    {
+        if (this->y == this->initY + 100)
 
-    if (this->y == this->initY + 100)
+            this->isFalling = true;
 
-        this->isFalling = true;
-
-    this->y += this->isFalling ? -1 : 1;
+        this->y += this->isFalling ? -1 : 1;
+    }
 }
 
 void loadBitmaps()
@@ -424,6 +447,18 @@ void loadBitmaps()
 
     titleWhite = (HBITMAP)LoadImage(NULL, "assets/titleWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     titleBlack = (HBITMAP)LoadImage(NULL, "assets/titleBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    portalW = (HBITMAP)LoadImage(NULL, "assets/portalW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    portalB = (HBITMAP)LoadImage(NULL, "assets/portalB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    doorW = (HBITMAP)LoadImage(NULL, "assets/doorW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    doorB = (HBITMAP)LoadImage(NULL, "assets/doorB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    buttonDownW = (HBITMAP)LoadImage(NULL, "assets/buttonDownW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    buttonDownB = (HBITMAP)LoadImage(NULL, "assets/buttonDownB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    buttonUpW = (HBITMAP)LoadImage(NULL, "assets/buttonUpW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    buttonUpB = (HBITMAP)LoadImage(NULL, "assets/buttonUpB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     startWhite = (HBITMAP)LoadImage(NULL, "assets/startWhite.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     startBlack = (HBITMAP)LoadImage(NULL, "assets/startBlack.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -461,11 +496,13 @@ void setDefaults()
     player1.x = WIDTH - 200;
     player2.x = WIDTH / 6;
     boxObj.x = WIDTH / 2;
+    upperPlatform.y = 330;
     // objects.push_back(&platform);
     objects.push_back(&leftPlt);
     objects.push_back(&rightPlt);
     objects.push_back(&rightWall);
     objects.push_back(&leftWall);
+    objects.push_back(&upperPlatform);
 
     objects.push_back(&player1);
     objects.push_back(&player2);
@@ -488,10 +525,12 @@ bool isBlocked(Object *p, bool isRight)
                 return true;
         }
         return false;
-    }else{
+    }
+    else
+    {
         for (auto obj : objects)
         {
-            if (p->x == obj->x + obj -> width && !obj->isPlayer && p->y < obj->y + obj->height)
+            if (p->x == obj->x + obj->width && !obj->isPlayer && p->y < obj->y + obj->height)
                 return true;
         }
         return false;
