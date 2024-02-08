@@ -71,6 +71,7 @@ public:
     bool isRight;
     bool isFalling;
     int initY;
+    bool completed;
     void jumping();
 };
 
@@ -84,11 +85,17 @@ Object leftWall(70, HEIGHT, 0, HEIGHT);
 Object boxObj;
 Object upperPlatform;
 
+static int level = 0;
+
 vector<Object *> objects = vector<Object *>();
 
 bool gameOver = false;
 void checkPortal(Player *p);
 void checkButtons(Player *p1, Player *p2);
+void checkSuccess(Player *p1, Player *p2);
+void checkGameover(Player *p1, Player *p2);
+void introScreen();
+void level1();
 
 int introInitHeight = 530;
 
@@ -378,7 +385,7 @@ void calculateSheepPosition(HWND hwnd)
         player2.y--;
         player2.isFalling = true;
     }
-
+    checkGameover(&player1, &player2);
     if (isPressed(VK_UP))
     {
 
@@ -432,6 +439,7 @@ void calculateSheepPosition(HWND hwnd)
     checkPortal(&player1);
     checkPortal(&player2);
     checkButtons(&player1, &player2);
+    checkSuccess(&player1, &player2);
 }
 
 void Player::jumping()
@@ -453,6 +461,17 @@ void Player::jumping()
 
         this->y += this->isFalling ? -1 : 1;
     }
+}
+
+void checkSuccess(Player *p1, Player *p2){
+    if(p1 -> x >= WIDTH - 175 && p2 -> x >= WIDTH - 175 && p1 -> y == 0 && p2 -> y == 0 ){
+        cout << "Level completed" << endl;
+    }
+}
+
+void checkGameover(Player *p1, Player *p2){
+    if (p1 -> y < -200 || p2 -> y < -200)
+          gameOver = true;
 }
 
 void checkPortal(Player *p)
