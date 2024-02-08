@@ -114,6 +114,8 @@ int introInitHeight = 530;
 
 HBITMAP bk, bk2, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack, box;
 HBITMAP player2WR, player2WL, player2BR, player2BL, powerB, powerW;
+HBITMAP player2WRBlue, player2WLBlue, player2BRBlue, player2BLBlue;
+HBITMAP player1WRBlue, player1WLBlue, player1BRBlue, player1BLBlue;
 HBITMAP wall, platform2, plt, plt2, portalW, portalB, doorW, doorB, buttonUpW, buttonUpB, buttonDownW, buttonDownB;
 HBITMAP buttonW1, buttonB1, buttonW2, buttonB2, leaderboardW, leaderboardB;
 
@@ -647,6 +649,16 @@ void loadBitmaps()
     player2WL = (HBITMAP)LoadImage(NULL, "assets/player2WL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     player2BR = (HBITMAP)LoadImage(NULL, "assets/player2BR.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     player2BL = (HBITMAP)LoadImage(NULL, "assets/player2BL.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    player1WRBlue = (HBITMAP)LoadImage(NULL, "assets/playerWRBlue.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1WLBlue = (HBITMAP)LoadImage(NULL, "assets/playerWLBlue.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1BRBlue = (HBITMAP)LoadImage(NULL, "assets/playerBRBlue.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player1BLBlue = (HBITMAP)LoadImage(NULL, "assets/playerBLBlue.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    player2WRBlue = (HBITMAP)LoadImage(NULL, "assets/player2WRBlue.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2WLBlue = (HBITMAP)LoadImage(NULL, "assets/player2WLBlue.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2BRBlue = (HBITMAP)LoadImage(NULL, "assets/player2BRBlue.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    player2BLBlue = (HBITMAP)LoadImage(NULL, "assets/player2BLBlue.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     powerB = (HBITMAP)LoadImage(NULL, "assets/powerB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     powerW = (HBITMAP)LoadImage(NULL, "assets/powerW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
