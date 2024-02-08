@@ -87,12 +87,15 @@ Object upperPlatform;
 vector<Object *> objects = vector<Object *>();
 
 bool gameOver = false;
+void checkPortal(Player *p);
+void checkButtons(Player *p1, Player *p2);
 
 int introInitHeight = 530;
 
 HBITMAP bk, bk2, bkGameOver, player1WR, player1WL, player1BR, player1BL, titleWhite, titleBlack, startWhite, startBlack, box;
 HBITMAP player2WR, player2WL, player2BR, player2BL;
 HBITMAP wall, platform2, plt, plt2, portalW, portalB, doorW, doorB, buttonUpW, buttonUpB, buttonDownW, buttonDownB;
+HBITMAP buttonW1, buttonB1, buttonW2, buttonB2;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -230,6 +233,21 @@ void draw(HWND hwnd)
     BitBlt(hdcMem, 75, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
     BitBlt(hdcMem, WIDTH - 180, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
 
+    // buttons
+    SelectObject(hdcTmp, buttonW1);
+    GetObject(buttonW1, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, WIDTH - 300, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+    SelectObject(hdcTmp, buttonW2);
+    GetObject(buttonW2, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, WIDTH / 2, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+
+    SelectObject(hdcTmp, buttonB1);
+    GetObject(buttonB1, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, WIDTH - 300, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+    SelectObject(hdcTmp, buttonB2);
+    GetObject(buttonB2, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, WIDTH / 2, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+
     // platform
     // SelectObject(hdcTmp, plt);
     // GetObject(plt, sizeof(BITMAP), &bm);
@@ -239,8 +257,16 @@ void draw(HWND hwnd)
 
     SelectObject(hdcTmp, plt);
     GetObject(plt, sizeof(BITMAP), &bm);
-    BitBlt(hdcMem, -30, HEIGHT - 170, bm.bmWidth / 5, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
-    BitBlt(hdcMem, bm.bmWidth / 5 + 300, HEIGHT - 170, bm.bmWidth / 2, bm.bmHeight, hdcTmp, 100, 0, SRCCOPY);
+    BitBlt(hdcMem, leftPlt.x, HEIGHT - 170, leftPlt.width, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+    BitBlt(hdcMem, rightPlt.x, HEIGHT - 170, bm.bmWidth / 2, bm.bmHeight, hdcTmp, 100, 0, SRCCOPY);
+
+    // door
+    SelectObject(hdcTmp, doorW);
+    GetObject(doorW, sizeof(BITMAP), &bm);
+    BitBlt(hdcMem, WIDTH - 180, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+
+    SelectObject(hdcTmp, doorB);
+    BitBlt(hdcMem, WIDTH - 180, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
 
     // title
     // SelectObject(hdcTmp, titleWhite);
@@ -361,7 +387,7 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(VK_RIGHT))
     {
         player1.isRight = true;
-        if (player1.x + player1.width <= WIDTH && !isBlocked(&player1, player1.isRight))
+        if (player1.x + player1.width <= WIDTH - rightWall.width && !isBlocked(&player1, player1.isRight))
             player1.x += 1;
         if (++player1.i > 16)
         {
@@ -371,7 +397,7 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(VK_LEFT))
     {
         player1.isRight = false;
-        if (player1.x >= 0 && !isBlocked(&player1, player1.isRight))
+        if (player1.x >= 0 + leftWall.width && !isBlocked(&player1, player1.isRight))
             player1.x -= 1;
         if (++player1.i > 16)
         {
@@ -386,29 +412,26 @@ void calculateSheepPosition(HWND hwnd)
     if (isPressed(0x44)) // VK_D
     {
         player2.isRight = true;
-        if (player2.x + player2.width <= WIDTH && !isBlocked(&player2, player2.isRight))
+        if (player2.x + player2.width <= WIDTH - rightWall.width && !isBlocked(&player2, player2.isRight))
             player2.x += 1;
         if (++player2.i > 16)
         {
             player2.i = 0;
         }
-        if (player2.x == 100 && player2.y == 0)
-        {
-            player2.x = WIDTH - 185;
-            player2.y = upperPlatform.y + 100;
-            player2.initY = upperPlatform.y + 100;
-        }
     }
     if (isPressed(0x41)) // VK_A
     {
         player2.isRight = false;
-        if (player2.x >= 0 && !isBlocked(&player2, player2.isRight))
+        if (player2.x >= 0 + leftWall.width && !isBlocked(&player2, player2.isRight))
             player2.x -= 1;
         if (++player2.i > 16)
         {
             player2.i = 0;
         }
     }
+    checkPortal(&player1);
+    checkPortal(&player2);
+    checkButtons(&player1, &player2);
 }
 
 void Player::jumping()
@@ -422,11 +445,6 @@ void Player::jumping()
         this->isFalling = false;
         this->isJumping = false;
     }
-    // if (this->isFalling && this->y == this->initY)
-    // {
-    //     this->isJumping = false;
-    //     this->isFalling = false;
-    // }
     else
     {
         if (this->y == this->initY + 100)
@@ -435,6 +453,43 @@ void Player::jumping()
 
         this->y += this->isFalling ? -1 : 1;
     }
+}
+
+void checkPortal(Player *p)
+{
+    if (p->x == 100 && p->y == 0)
+    {
+        p->x = WIDTH - 185;
+        p->y = p->initY = upperPlatform.y + upperPlatform.height;
+    }
+    if (p->x == WIDTH - 180 && p->y == upperPlatform.y + upperPlatform.height)
+    {
+        p->x = 105;
+        p->y = p->initY = 0;
+    }
+}
+
+void checkButtons(Player *p1, Player *p2)
+{
+    if (p1->x > WIDTH - 300 - 10 && p1->x < WIDTH - 300 + 10 && p1->y == 0 || p2->x > WIDTH - 300 - 10 && p2->x < WIDTH - 300 + 10 && p2->y == 0)
+    {
+        buttonW1 = buttonDownW;
+        buttonB1 = buttonDownB;
+        leftPlt.width = WIDTH;
+        return;
+    }
+    if (p1->x > WIDTH / 2 - 10 && p1->x < WIDTH / 2 + 10 && p1->y == upperPlatform.y + upperPlatform.height || p2->x > WIDTH / 2 - 10 && p2->x < WIDTH / 2 + 10 && p2->y == upperPlatform.y + upperPlatform.height)
+    {
+        buttonW2 = buttonDownW;
+        buttonB2 = buttonDownB;
+        leftPlt.width = WIDTH;
+        return;
+    }
+    buttonW1 = buttonUpW;
+    buttonW2 = buttonUpW;
+    buttonB1 = buttonUpB;
+    buttonB2 = buttonUpB;
+    leftPlt.width = WIDTH / 3 - 30;
 }
 
 void loadBitmaps()
@@ -512,6 +567,9 @@ void setDefaults()
 
     objects.push_back(&player1);
     objects.push_back(&player2);
+
+    buttonW1 = buttonUpW;
+    buttonB1 = buttonUpB;
 
     // objects.push_back(&boxObj);
 }
