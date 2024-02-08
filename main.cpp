@@ -77,8 +77,8 @@ public:
 Player player1;
 Player player2;
 Object platform(WIDTH, 0, 0, 0);
-Object leftPlt(WIDTH / 3 - 30, 0, 0, 0);
-Object rightPlt(WIDTH, 0, WIDTH / 2 + 165, 0);
+Object leftPlt(WIDTH / 3 - 30, 100, 0, -100);
+Object rightPlt(WIDTH, 100, WIDTH / 2 + 165, -100);
 Object rightWall(70, HEIGHT, WIDTH - 70, HEIGHT);
 Object leftWall(70, HEIGHT, 0, HEIGHT);
 Object boxObj;
@@ -554,7 +554,7 @@ void deleteBitmaps()
 
 void setDefaults()
 {
-    player1.x = WIDTH - 200;
+    player1.x = WIDTH / 6 + 5;
     player2.x = WIDTH / 6;
     boxObj.x = WIDTH / 2;
     upperPlatform.y = 330;
@@ -594,7 +594,7 @@ bool isBlocked(Object *p, bool isRight)
     {
         for (auto obj : objects)
         {
-            if (p->x == obj->x + obj->width && !obj->isPlayer && p->y < obj->y + obj->height)
+            if (p->x == obj->x + obj->width && !obj->isPlayer && p->y < obj->y + obj->height && p->y + p->height > obj->y)
                 return true;
         }
         return false;
