@@ -343,9 +343,15 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 void calculateSheepPosition(HWND hwnd)
 {
     if (shouldFall(&player1) && !player1.isJumping)
+    {
         player1.y--;
+        player1.isFalling = true;
+    }
     if (shouldFall(&player2) && !player2.isJumping)
+    {
         player2.y--;
+        player2.isFalling = true;
+    }
 
     if (isPressed(VK_UP))
     {
@@ -521,7 +527,7 @@ bool isBlocked(Object *p, bool isRight)
     {
         for (auto obj : objects)
         {
-            if (p->x + p->width == obj->x && !obj->isPlayer && p->y < obj->y + obj->height)
+            if (p->x + p->width == obj->x && !obj->isPlayer && p->y < obj->y + obj->height && p->y + p->height > obj->y)
                 return true;
         }
         return false;
