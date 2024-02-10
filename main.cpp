@@ -790,6 +790,8 @@ void deleteBitmaps()
 
 void setDefaults()
 {
+    isButtonDown = false;
+    showBox = false;
     player1.x = WIDTH / 6;
     player2.x = WIDTH / 6;
     player1.y = player1.initY = player2.y = player2.initY = 0;
