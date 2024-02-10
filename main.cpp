@@ -67,6 +67,7 @@ void checkStart(HWND);
 void checkLeaderboard(HWND);
 void checkPower();
 void playJumpSound(int);
+void playButtonSound();
 void playPowerSound();
 
 void playPortalSound()
@@ -121,6 +122,7 @@ Object boxObj5;
 
 int level = 2;
 bool showBox = false;
+bool isButtonDown = false;
 
 vector<Object *> objects = vector<Object *>();
 
@@ -570,23 +572,26 @@ void calculateSheepPosition(HWND hwnd)
             player2.i = 0;
         }
     }
-    if (level == 1)
+    if (isPressed(0x41) || isPressed(0x44) || isPressed(0x57) || isPressed(VK_UP) || isPressed(VK_LEFT) || isPressed(VK_RIGHT))
     {
-        checkPortal(&player1);
-        checkPortal(&player2);
-        checkButtons(&player1, &player2);
-        checkSuccess(&player1, &player2);
-    }
-    if (level == 0)
-    {
-        checkStart(hwnd);
-        checkLeaderboard(hwnd);
-    }
-    if (level == 2)
-    {
-        checkPower();
-        checkButtons(&player1, &player2);
-        checkSuccess(&player1, &player2);
+        if (level == 1)
+        {
+            checkPortal(&player1);
+            checkPortal(&player2);
+            checkButtons(&player1, &player2);
+            checkSuccess(&player1, &player2);
+        }
+        if (level == 0)
+        {
+            checkStart(hwnd);
+            checkLeaderboard(hwnd);
+        }
+        if (level == 2)
+        {
+            checkPower();
+            checkButtons(&player1, &player2);
+            checkSuccess(&player1, &player2);
+        }
     }
 }
 
@@ -667,6 +672,8 @@ void checkButtons(Player *p1, Player *p2)
         buttonW1 = buttonDownW;
         buttonB1 = buttonDownB;
         leftPlt.width = WIDTH;
+        playButtonSound();
+        isButtonDown = true;
         return;
     }
     if ((p1->x > WIDTH / 2 - 10 && p1->x < WIDTH / 2 + 10 && p1->y == upperPlatform.y + upperPlatform.height || p2->x > WIDTH / 2 - 10 && p2->x < WIDTH / 2 + 10 && p2->y == upperPlatform.y + upperPlatform.height) && level == 1)
@@ -674,12 +681,17 @@ void checkButtons(Player *p1, Player *p2)
         buttonW2 = buttonDownW;
         buttonB2 = buttonDownB;
         leftPlt.width = WIDTH;
+        playButtonSound();
+        isButtonDown = true;
+
         return;
     }
     if ((p1->x > WIDTH - 250 - 10 && p1->x < WIDTH - 250 + 10 && p1->y == 0 || p2->x > WIDTH - 250 - 10 && p2->x < WIDTH - 250 + 10 && p2->y == 0) && level == 2)
     {
         buttonW1 = buttonDownW;
         buttonB1 = buttonDownB;
+        playButtonSound();
+        isButtonDown = true;
         if (!showBox)
         {
             showBox = true;
@@ -697,6 +709,7 @@ void checkButtons(Player *p1, Player *p2)
         objects.pop_back();
     }
     leftPlt.width = WIDTH / 3 - 30;
+    isButtonDown = false;
 }
 
 void loadBitmaps()
@@ -909,6 +922,17 @@ void playPowerSound()
     mciSendString("open thunderSound.wav type waveaudio alias power",
                   NULL, 0, NULL);
     mciSendString("play power", NULL, 0, NULL);
+}
+
+void playButtonSound()
+{
+    if (!isButtonDown)
+    {
+        mciSendString("close button", NULL, 0, NULL);
+        mciSendString("open buttonSound.wav type waveaudio alias button",
+                      NULL, 0, NULL);
+        mciSendString("play button", NULL, 0, NULL);
+    }
 }
 
 INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
