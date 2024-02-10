@@ -12,6 +12,7 @@
 #include <random>
 #include <vector>
 #include "resources.h"
+#include <thread>
 
 #define WIDTH 1000
 #define HEIGHT 700
@@ -64,6 +65,23 @@ bool shouldFall(Object *obj);
 bool isBlocked(Object *obj, bool);
 void checkStart(HWND);
 void checkLeaderboard(HWND);
+void playJumpSound(int);
+
+void playPortalSound()
+{
+    mciSendString("close portal", NULL, 0, NULL);
+    mciSendString("open teleportSound.wav type waveaudio alias portal",
+                  NULL, 0, NULL);
+    mciSendString("play portal", NULL, 0, NULL);
+}
+
+void playGameoverSound()
+{
+    mciSendString("close gameover", NULL, 0, NULL);
+    mciSendString("open gameoverSound.wav type waveaudio alias gameover",
+                  NULL, 0, NULL);
+    mciSendString("play gameover", NULL, 0, NULL);
+}
 
 class Player : public Object
 {
@@ -86,12 +104,12 @@ Player player2;
 Object platform(WIDTH, 0, 0, 0);
 Object leftPlt(WIDTH / 3 - 30, 100, 0, -100);
 Object rightPlt(WIDTH, 100, WIDTH / 2 + 165, -100);
-Object rightWall(70, HEIGHT, WIDTH - 70, HEIGHT);
-Object leftWall(70, HEIGHT, 0, HEIGHT);
+Object rightWall(70, HEIGHT, WIDTH - 70, 0);
+Object leftWall(70, HEIGHT, 0, 0);
 Object boxObj;
 Object upperPlatform;
 
-static int level = 0;
+int level = 1;
 
 vector<Object *> objects = vector<Object *>();
 
@@ -217,8 +235,10 @@ void draw(HWND hwnd)
         ReleaseDC(hwnd, hdc);
         return;
     }
-
-    background = bk;
+    if (level == 0)
+        background = bk;
+    if (level == 1)
+        background = bk2;
     player1White = player1.isRight ? player1WR : player1WL;
     player1Black = player1.isRight ? player1BR : player1BL;
 
@@ -374,6 +394,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     case WM_CREATE:
         loadBitmaps();
         setDefaults();
+        sndPlaySound("backgroundSound.wav", SND_FILENAME | SND_LOOP | SND_ASYNC);
         break;
     case WM_KEYUP:
         if (gameOver)
@@ -412,7 +433,10 @@ void calculateSheepPosition(HWND hwnd)
     checkGameover(&player1, &player2);
     if (isPressed(VK_UP))
     {
-
+        if (!player1.isJumping)
+        {
+            playJumpSound(1);
+        }
         player1.isJumping = true;
     }
     if (isPressed(VK_RIGHT))
@@ -438,6 +462,10 @@ void calculateSheepPosition(HWND hwnd)
 
     if (isPressed(0x57)) // VK_W
     {
+        if (!player2.isJumping)
+        {
+            playJumpSound(2);
+        }
         player2.isJumping = true;
     }
     if (isPressed(0x44)) // VK_D
@@ -506,7 +534,10 @@ void checkSuccess(Player *p1, Player *p2)
 void checkGameover(Player *p1, Player *p2)
 {
     if (p1->y < -200 || p2->y < -200)
+    {
         gameOver = true;
+        playGameoverSound();
+    }
 }
 
 void checkPortal(Player *p)
@@ -515,11 +546,13 @@ void checkPortal(Player *p)
     {
         p->x = WIDTH - 185;
         p->y = p->initY = upperPlatform.y + upperPlatform.height;
+        playPortalSound();
     }
     if (p->x == WIDTH - 180 && p->y == upperPlatform.y + upperPlatform.height)
     {
         p->x = 105;
         p->y = p->initY = 0;
+        playPortalSound();
     }
 }
 
@@ -685,6 +718,24 @@ void setLevel(int l)
     level = l;
     objects.clear();
     setDefaults();
+}
+
+void playJumpSound(int p)
+{
+    if (p == 1)
+    {
+        mciSendString("close p1", NULL, 0, NULL);
+        mciSendString("open jumpSound.wav type waveaudio alias p1",
+                      NULL, 0, NULL);
+        mciSendString("play p1", NULL, 0, NULL);
+    }
+    else
+    {
+        mciSendString("close p2", NULL, 0, NULL);
+        mciSendString("open jumpSound.wav type waveaudio alias p2",
+                      NULL, 0, NULL);
+        mciSendString("play p2", NULL, 0, NULL);
+    }
 }
 
 INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
