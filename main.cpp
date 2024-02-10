@@ -120,7 +120,7 @@ Object boxObj3;
 Object boxObj4;
 Object boxObj5;
 
-int level = 2;
+int level = 0;
 bool showBox = false;
 bool isButtonDown = false;
 
@@ -621,6 +621,7 @@ void checkSuccess(Player *p1, Player *p2)
     if (p1->x >= WIDTH - 175 && p2->x >= WIDTH - 175 && p1->y == 0 && p2->y == 0)
     {
         cout << "Level completed" << endl;
+        setLevel(++level);
     }
 }
 
