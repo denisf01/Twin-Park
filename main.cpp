@@ -131,6 +131,7 @@ void checkPortal(Player *p);
 void checkButtons(Player *p1, Player *p2);
 void checkSuccess(Player *p1, Player *p2);
 void checkGameover(Player *p1, Player *p2);
+void checkExit(Player *p1, Player *p2);
 
 int introInitHeight = 530;
 
@@ -140,6 +141,7 @@ HBITMAP player2WRBlue, player2WLBlue, player2BRBlue, player2BLBlue;
 HBITMAP player1WRBlue, player1WLBlue, player1BRBlue, player1BLBlue;
 HBITMAP wall, platform2, plt, plt2, portalW, portalB, doorW, doorB, buttonUpW, buttonUpB, buttonDownW, buttonDownB;
 HBITMAP buttonW1, buttonB1, buttonW2, buttonB2, leaderboardW, leaderboardB;
+HBITMAP exitSignW, exitSignB;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -298,6 +300,32 @@ void draw(HWND hwnd)
         BitBlt(hdcMem, 2 * WIDTH / 3 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
         SelectObject(hdcTmp, leaderboardB);
         BitBlt(hdcMem, 2 * WIDTH / 3 - bm.bmWidth / 2, HEIGHT / 3, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+
+        // portal1
+
+        SelectObject(hdcTmp, portalW);
+        GetObject(portalW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH - 110, introInitHeight - 110, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, portalB);
+        BitBlt(hdcMem, WIDTH - 110, introInitHeight - 110, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+
+        // portal2
+
+        SelectObject(hdcTmp, portalW);
+        GetObject(portalW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, 0, introInitHeight - 110, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, portalB);
+        BitBlt(hdcMem, 0, introInitHeight - 110, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+
+        // exit sign
+
+        // portal
+
+        SelectObject(hdcTmp, exitSignW);
+        GetObject(exitSignW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH / 2 - 50, introInitHeight - 130, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, exitSignB);
+        BitBlt(hdcMem, WIDTH / 2 -50, introInitHeight - 130, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
     }
     else if (level == 1)
     {
@@ -574,6 +602,10 @@ void calculateSheepPosition(HWND hwnd)
     }
     if (isPressed(0x41) || isPressed(0x44) || isPressed(0x57) || isPressed(VK_UP) || isPressed(VK_LEFT) || isPressed(VK_RIGHT))
     {
+        if(level == 0 )
+        {
+            checkExit(&player1, &player2);
+        }
         if (level == 1)
         {
             checkPortal(&player1);
@@ -648,6 +680,12 @@ void checkGameover(Player *p1, Player *p2)
         gameOver = true;
         playGameoverSound();
     }
+}
+void checkExit(Player *p1, Player *p2)
+{
+    if ((p1->x > WIDTH - 90 && p1->y == 0) || (p2->x > WIDTH - 90 && p2->y == 0) ||
+        (p1->x < 25 && p1->y == 0) || (p2->x < 25 && p2->y == 0))
+        exit(1);
 }
 
 void checkPortal(Player *p)
@@ -770,6 +808,9 @@ void loadBitmaps()
 
     powerB = (HBITMAP)LoadImage(NULL, "assets/powerB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     powerW = (HBITMAP)LoadImage(NULL, "assets/powerW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    exitSignW = (HBITMAP)LoadImage(NULL, "assets/exitSignW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    exitSignB = (HBITMAP)LoadImage(NULL, "assets/exitSignB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 }
 
 void deleteBitmaps()
