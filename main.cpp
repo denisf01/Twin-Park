@@ -13,6 +13,8 @@
 #include <vector>
 #include "resources.h"
 #include <thread>
+#include <chrono>
+#include <iomanip>
 
 #define WIDTH 1000
 #define HEIGHT 700
@@ -21,6 +23,10 @@
 using namespace std;
 
 string teamName = "";
+auto startTime = std::chrono::high_resolution_clock::now();
+;
+auto endTime = std::chrono::high_resolution_clock::now();
+;
 
 void isGameOver(HWND);
 void draw(HWND);
@@ -59,6 +65,14 @@ vector<Object *> filterObjects(const vector<Object *> &other, Object *obj)
     // Filter the original vector
     std::copy_if(other.begin(), other.end(), std::back_inserter(filteredVector), condition);
     return filteredVector;
+}
+
+void secondsToHMS(int seconds, int &hours, int &minutes, int &remainingSeconds)
+{
+    hours = seconds / 3600;
+    int remaining = seconds % 3600;
+    minutes = remaining / 60;
+    remainingSeconds = remaining % 60;
 }
 
 bool shouldFall(Object *obj);
@@ -120,7 +134,7 @@ Object boxObj3;
 Object boxObj4;
 Object boxObj5;
 
-int level = 0;
+int level = 3;
 bool showBox = false;
 bool isButtonDown = false;
 
@@ -142,6 +156,7 @@ HBITMAP player1WRBlue, player1WLBlue, player1BRBlue, player1BLBlue;
 HBITMAP wall, platform2, plt, plt2, portalW, portalB, doorW, doorB, buttonUpW, buttonUpB, buttonDownW, buttonDownB;
 HBITMAP buttonW1, buttonB1, buttonW2, buttonB2, leaderboardW, leaderboardB;
 HBITMAP exitSignW, exitSignB;
+HBITMAP buttonW1, buttonB1, buttonW2, buttonB2, leaderboardW, leaderboardB, finalBackground;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -238,7 +253,7 @@ void draw(HWND hwnd)
 
     if (gameOver)
     {
-        background = bkGameOver;
+        background = level == 3 ? finalBackground : bkGameOver;
         hdcMem = CreateCompatibleDC(hdc);
         tmp1 = (HBITMAP)SelectObject(hdcMem, background);
         GetObject(background, sizeof(BITMAP), &bm);
@@ -246,7 +261,24 @@ void draw(HWND hwnd)
 
         SelectObject(hdcMem, tmp1);
         DeleteObject(hdcMem);
+        if (level == 3)
+        {
+            std::chrono::duration<double> duration = endTime - startTime;
+            int totalSeconds = duration.count();
+            int hours, minutes, seconds;
 
+            secondsToHMS(totalSeconds, hours, minutes, seconds);
+
+            std::cout << std::setfill('0') << std::setw(2) << hours << ":"
+                      << std::setfill('0') << std::setw(2) << minutes << ":"
+                      << std::setfill('0') << std::setw(2) << seconds << std::endl;
+            string sHours = "0" + to_string(hours);
+            string sMinutes = "0" + to_string(minutes);
+            string sSeconds = "0" + to_string(seconds);
+
+            string totalTime = sHours.substr(sHours.size() - 2) + ":" + sMinutes.substr(sMinutes.size() - 2) + ":" + sSeconds.substr(sSeconds.size() - 2);
+            TextOut(hdc, WIDTH / 2 - 30, HEIGHT - 115, totalTime.c_str(), strlen(totalTime.c_str()));
+        }
         ReleaseDC(hwnd, hdc);
         return;
     }
@@ -746,6 +778,8 @@ void loadBitmaps()
     plt = (HBITMAP)LoadImage(NULL, "assets/platform.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     plt2 = (HBITMAP)LoadImage(NULL, "assets/platformHole.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
+    finalBackground = (HBITMAP)LoadImage(NULL, "assets/finalBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
     bk2 = (HBITMAP)LoadImage(NULL, "assets/levelOneBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     wall = (HBITMAP)LoadImage(NULL, "assets/wall.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     platform2 = (HBITMAP)LoadImage(NULL, "assets/platform2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -927,6 +961,15 @@ bool isBlocked(Object *p, bool isRight)
 void setLevel(int l)
 {
     level = l;
+    if (level == 1)
+    {
+        startTime = std::chrono::high_resolution_clock::now();
+    }
+    if (level == 3)
+    {
+        endTime = std::chrono::high_resolution_clock::now();
+        gameOver = true;
+    }
     objects.clear();
     setDefaults();
 }
