@@ -134,7 +134,7 @@ Object boxObj3;
 Object boxObj4;
 Object boxObj5;
 
-int level = 3;
+int level = 0;
 bool showBox = false;
 bool isButtonDown = false;
 
@@ -154,7 +154,6 @@ HBITMAP player2WR, player2WL, player2BR, player2BL, powerB, powerW;
 HBITMAP player2WRBlue, player2WLBlue, player2BRBlue, player2BLBlue;
 HBITMAP player1WRBlue, player1WLBlue, player1BRBlue, player1BLBlue;
 HBITMAP wall, platform2, plt, plt2, portalW, portalB, doorW, doorB, buttonUpW, buttonUpB, buttonDownW, buttonDownB;
-HBITMAP buttonW1, buttonB1, buttonW2, buttonB2, leaderboardW, leaderboardB;
 HBITMAP exitSignW, exitSignB;
 HBITMAP buttonW1, buttonB1, buttonW2, buttonB2, leaderboardW, leaderboardB, finalBackground;
 
