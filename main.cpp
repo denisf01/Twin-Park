@@ -25,6 +25,7 @@
 using namespace std;
 
 string teamName = "";
+int hearts = 3;
 auto startTime = std::chrono::high_resolution_clock::now();
 ;
 auto endTime = std::chrono::high_resolution_clock::now();
@@ -107,6 +108,21 @@ void playGameoverSound()
     mciSendString("play gameover", NULL, 0, NULL);
 }
 
+void playSuccessSound()
+{
+    mciSendString("close success", NULL, 0, NULL);
+    mciSendString("open successSound.wav type waveaudio alias success",
+                  NULL, 0, NULL);
+    mciSendString("play success", NULL, 0, NULL);
+}
+void playGameover2Sound()
+{
+    mciSendString("close gameover2", NULL, 0, NULL);
+    mciSendString("open gameover2Sound.wav type waveaudio alias gameover2",
+                  NULL, 0, NULL);
+    mciSendString("play gameover2", NULL, 0, NULL);
+}
+
 class Player : public Object
 {
 public:
@@ -165,6 +181,7 @@ HBITMAP player1WRBlue, player1WLBlue, player1BRBlue, player1BLBlue;
 HBITMAP wall, platform2, plt, plt2, portalW, portalB, doorW, doorB, buttonUpW, buttonUpB, buttonDownW, buttonDownB;
 HBITMAP exitSignW, exitSignB;
 HBITMAP buttonW1, buttonB1, buttonW2, buttonB2, leaderboardW, leaderboardB, finalBackground;
+HBITMAP hearts3W, hearts2W, hearts1W, hearts3B, hearts2B, hearts1B;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -206,8 +223,8 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
     hwnd = CreateWindowEx(
         0,                                       /* Extended possibilites for variation */
         szClassName,                             /* Classname */
-        _T("Code::Blocks Template Windows App"), /* Title Text */
-        WS_OVERLAPPEDWINDOW,                     /* default window */
+        _T("Twin Park"),                         /* Title Text */
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, /* default window */
         CW_USEDEFAULT,                           /* Windows decides the position */
         CW_USEDEFAULT,                           /* where the window ends up on the screen */
         WIDTH,                                   /* The programs width */
@@ -256,7 +273,7 @@ void draw(HWND hwnd)
 {
     HDC hdc = GetDC(hwnd);
     HDC hdcMem, hdcTmp;
-    HBITMAP hbmMem, background, player1White, player1Black, tmp1, tmp2, player2White, player2Black;
+    HBITMAP hbmMem, background, player1White, player1Black, tmp1, tmp2, player2White, player2Black, heartsW, heartsB;
     BITMAP bm;
 
     if (gameOver)
@@ -272,6 +289,7 @@ void draw(HWND hwnd)
         if (level == 3)
         {
             string totalTime = getTotalTime();
+            playSuccessSound();
             TextOut(hdc, WIDTH / 2 - 30, HEIGHT - 115, totalTime.c_str(), strlen(totalTime.c_str()));
         }
         ReleaseDC(hwnd, hdc);
@@ -501,6 +519,20 @@ void draw(HWND hwnd)
     SelectObject(hdcTmp, player2Black);
     BitBlt(hdcMem, player2.x, introInitHeight - player2.height - player2.y, player2.width, player2.height, hdcTmp, player2.i * player2.width, 0, SRCPAINT);
 
+    // hearts
+    heartsW = hearts == 3 ? hearts3W : hearts == 2 ? hearts2W
+                                                   : hearts1W;
+    heartsB = hearts == 3 ? hearts3B : hearts == 2 ? hearts2B
+                                                   : hearts1B;
+    if (level != 0 && level != 3)
+    {
+        SelectObject(hdcTmp, heartsW);
+        GetObject(heartsW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH - 150, 20, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, heartsB);
+        BitBlt(hdcMem, WIDTH - 150, 20, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+    }
+
     GetObject(hbmMem, sizeof(BITMAP), &bm);
     BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
 
@@ -526,17 +558,33 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
         sndPlaySound("backgroundSound.wav", SND_FILENAME | SND_LOOP | SND_ASYNC);
         break;
     case WM_KEYUP:
-        if (gameOver)
+        if (wParam == VK_SPACE)
         {
-            gameOver = false;
-            objects.clear();
-            setDefaults();
+            if (gameOver && level != 3)
+            {
+                gameOver = false;
+                level = 0;
+                objects.clear();
+                hearts = 3;
+                setDefaults();
+            }
         }
-        break;
-    case WM_LBUTTONDOWN:
-        // DialogBox(NULL, MAKEINTRESOURCE(IDD_TEAM_NAME), hwnd, DlgProcTeamName);
 
         break;
+    case WM_LBUTTONDOWN:
+    {
+        int x = LOWORD(lParam);
+        int y = HIWORD(lParam);
+        if (level == 3 && x > 845 && x < 939 && y > 530 && y < 640)
+        {
+            cout << "GOOOOD \n";
+            setLevel(0);
+            hearts = 3;
+        }
+        cout << x << " " << y << endl;
+    }
+
+    break;
     case WM_DESTROY:
         deleteBitmaps();
         PostQuitMessage(0); /* send a WM_QUIT to the message queue */
@@ -692,10 +740,19 @@ void checkPower()
 
 void checkGameover(Player *p1, Player *p2)
 {
-    if (p1->y < -200 || p2->y < -200)
+    if (p1->y < -200 || p2->y < -200 && !gameOver)
     {
-        gameOver = true;
-        playGameoverSound();
+        if (--hearts == 0)
+        {
+            gameOver = true;
+            playGameover2Sound();
+        }
+        else
+        {
+            playGameoverSound();
+            objects.clear();
+            setDefaults();
+        }
     }
 }
 void checkExit(Player *p1, Player *p2)
@@ -772,6 +829,13 @@ void loadBitmaps()
     bk = (HBITMAP)LoadImage(NULL, "assets/introBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     plt = (HBITMAP)LoadImage(NULL, "assets/platform.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     plt2 = (HBITMAP)LoadImage(NULL, "assets/platformHole.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    hearts3W = (HBITMAP)LoadImage(NULL, "assets/hearts3W.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hearts2W = (HBITMAP)LoadImage(NULL, "assets/hearts2W.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hearts1W = (HBITMAP)LoadImage(NULL, "assets/hearts1W.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hearts3B = (HBITMAP)LoadImage(NULL, "assets/hearts3B.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hearts2B = (HBITMAP)LoadImage(NULL, "assets/hearts2B.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hearts1B = (HBITMAP)LoadImage(NULL, "assets/hearts1B.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     finalBackground = (HBITMAP)LoadImage(NULL, "assets/finalBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
@@ -877,6 +941,8 @@ void setDefaults()
         objects.push_back(&platform);
     if (level == 1)
     {
+        rightPlt.x = WIDTH / 2 + 165;
+
         objects.push_back(&leftPlt);
         objects.push_back(&rightPlt);
         objects.push_back(&rightWall);
@@ -966,6 +1032,8 @@ void setLevel(int l)
         saveTime();
         gameOver = true;
     }
+    if (level == 0)
+        gameOver = false;
     objects.clear();
     setDefaults();
 }
@@ -1164,8 +1232,10 @@ void saveTime()
     }
     else if (status == SQLITE_CONSTRAINT)
     {
-        sprintf(sql, "UPDATE Leaderboard SET time =  CASE WHEN sortTime > '%i' THEN '%s' ELSE time, sortTime = CASE WHEN sortTime > '%i' THEN '%i' ELSE sortTime WHERE teamName = '%s';", getDuration(), getTotalTime().c_str(), getDuration(), getDuration(), teamName.c_str());
+        sprintf(sql, "UPDATE Leaderboard SET time = CASE WHEN sortTime > %i THEN '%s' ELSE time END, sortTime = CASE WHEN sortTime > %i THEN %i ELSE sortTime END WHERE teamName = '%s';", getDuration(), getTotalTime().c_str(), getDuration(), getDuration(), teamName.c_str());
         status = sqlite3_exec(db, sql, 0, 0, &err);
+        if (status != SQLITE_OK)
+            cout << err;
         sqlite3_free(err);
         sqlite3_close(db);
     }
