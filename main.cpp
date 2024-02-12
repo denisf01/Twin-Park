@@ -31,14 +31,11 @@ auto startTime = std::chrono::high_resolution_clock::now();
 auto endTime = std::chrono::high_resolution_clock::now();
 ;
 
-void isGameOver(HWND);
 void draw(HWND);
-void calculateSheepPosition(HWND);
-void calculateBirdPosition(HWND);
+void calculatePlayerPosition(HWND);
 string getTotalTime();
 int getDuration();
 void saveTime();
-void calculateWolfPosition(HWND);
 void loadBitmaps();
 void InitListViewColumns(HWND hwndListView);
 void deleteBitmaps();
@@ -164,33 +161,16 @@ public:
     int hasKey = 0;
 };
 
-Player player1;
-Player player2;
+Player player1, player2;
 Object platform(WIDTH, 0, 0, 0);
 Object leftPlt(WIDTH / 3 - 30, 100, 0, -100);
 Object rightPlt(WIDTH, 100, WIDTH / 2 + 165, -100);
 Object rightWall(70, HEIGHT, WIDTH - 70, 0);
 Object leftWall(70, HEIGHT, 0, 0);
-Object upperPlatform;
-Object upperPlatform2;
-Object upperPlatform3;
-Object upperPlatform4;
-Object boxObj;
-Object boxObj1;
-Object boxObj2;
-Object boxObj3;
-Object boxObj4;
-Object boxObj5;
-Object boxObj30;
-Object boxObj31;
-Object boxObj32;
-Object boxObj33;
-Object boxObj34;
-Object boxObj35;
-Object boxObj36;
-Object boxObj37;
-Object boxObj38;
-Object boxObj39;
+Object upperPlatform, upperPlatform2, upperPlatform3, upperPlatform4,
+    boxObj, boxObj1, boxObj2, boxObj3, boxObj4, boxObj5,
+    boxObj30, boxObj31, boxObj32, boxObj33, boxObj34,
+    boxObj35, boxObj36, boxObj37, boxObj38, boxObj39;
 
 int level = 0;
 bool showBox = false;
@@ -289,7 +269,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
             Sleep(100);
             continue;
         }
-        calculateSheepPosition(hwnd);
+        calculatePlayerPosition(hwnd);
         if (player1.isJumping)
 
             player1.jumping();
@@ -297,8 +277,6 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
         if (player2.isJumping)
             player2.jumping();
         draw(hwnd);
-        // isGameOver(hwnd);
-        // Sleep(40);
     }
 
     /* The program return-value is 0 - The value that PostQuitMessage() gave */
@@ -446,14 +424,6 @@ void draw(HWND hwnd)
 
         SelectObject(hdcTmp, doorB);
         BitBlt(hdcMem, WIDTH - 180, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
-
-        // box
-
-        // SelectObject(hdcTmp, box);
-        // GetObject(box, sizeof(BITMAP), &bm);
-        // boxObj.width = bm.bmWidth;
-        // boxObj.height = bm.bmHeight;
-        // BitBlt(hdcMem, boxObj.x, introInitHeight - boxObj.height - boxObj.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
 
         // wall
 
@@ -719,7 +689,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     return 0;
 }
 
-void calculateSheepPosition(HWND hwnd)
+void calculatePlayerPosition(HWND hwnd)
 {
     if (shouldFall(&player1) && !player1.isJumping)
     {
@@ -1055,17 +1025,56 @@ void deleteBitmaps()
 {
 
     DeleteObject(bk);
+    DeleteObject(plt);
+    DeleteObject(plt2);
+    DeleteObject(hearts3W);
+    DeleteObject(hearts2W);
+    DeleteObject(hearts1W);
+    DeleteObject(hearts3B);
+    DeleteObject(hearts2B);
+    DeleteObject(hearts1B);
+    DeleteObject(finalBackground);
+    DeleteObject(bk2);
+    DeleteObject(wall);
+    DeleteObject(platform2);
     DeleteObject(box);
     DeleteObject(bkGameOver);
+    DeleteObject(titleWhite);
+    DeleteObject(titleBlack);
+    DeleteObject(portalW);
+    DeleteObject(portalB);
+    DeleteObject(doorW);
+    DeleteObject(doorB);
+    DeleteObject(buttonDownW);
+    DeleteObject(buttonDownB);
+    DeleteObject(buttonUpW);
+    DeleteObject(buttonUpB);
+    DeleteObject(startWhite);
+    DeleteObject(startBlack);
+    DeleteObject(leaderboardW);
+    DeleteObject(leaderboardB);
     DeleteObject(player1WR);
     DeleteObject(player1WL);
     DeleteObject(player1BR);
     DeleteObject(player1BL);
-
     DeleteObject(player2WR);
     DeleteObject(player2WL);
     DeleteObject(player2BR);
     DeleteObject(player2BL);
+    DeleteObject(player1WRBlue);
+    DeleteObject(player1WLBlue);
+    DeleteObject(player1BRBlue);
+    DeleteObject(player1BLBlue);
+    DeleteObject(player2WRBlue);
+    DeleteObject(player2WLBlue);
+    DeleteObject(player2BRBlue);
+    DeleteObject(player2BLBlue);
+    DeleteObject(powerB);
+    DeleteObject(powerW);
+    DeleteObject(exitSignW);
+    DeleteObject(exitSignB);
+    DeleteObject(keyW);
+    DeleteObject(keyB);
 }
 
 void setDefaults()
@@ -1172,8 +1181,6 @@ void setDefaults()
 
     buttonW1 = buttonUpW;
     buttonB1 = buttonUpB;
-
-    // objects.push_back(&boxObj);
 }
 
 bool shouldFall(Object *obj)
@@ -1187,7 +1194,6 @@ void checkStart(HWND hwnd)
     {
         DialogBox(NULL, MAKEINTRESOURCE(IDD_TEAM_NAME), hwnd, DlgProcTeamName);
     }
-    // WIDTH / 3 - bm.bmWidth / 2, HEIGHT / 3,
 }
 
 void checkLeaderboard(HWND hwnd)
@@ -1387,7 +1393,7 @@ void InitListViewColumns(HWND hwndListView)
 {
     LVCOLUMN lvColumn;
     lvColumn.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-    lvColumn.cx = 200; // Set the column width
+    lvColumn.cx = 200;
 
     lvColumn.iSubItem = 0;
     lvColumn.pszText = "Team name";
