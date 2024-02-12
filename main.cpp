@@ -127,14 +127,26 @@ Object rightWall(70, HEIGHT, WIDTH - 70, 0);
 Object leftWall(70, HEIGHT, 0, 0);
 Object upperPlatform;
 Object upperPlatform2;
+Object upperPlatform3;
+Object upperPlatform4;
 Object boxObj;
 Object boxObj1;
 Object boxObj2;
 Object boxObj3;
 Object boxObj4;
 Object boxObj5;
+Object boxObj30;
+Object boxObj31;
+Object boxObj32;
+Object boxObj33;
+Object boxObj34;
+Object boxObj35;
+Object boxObj36;
+Object boxObj37;
+Object boxObj38;
+Object boxObj39;
 
-int level = 0;
+int level = 4;
 bool showBox = false;
 bool isButtonDown = false;
 
@@ -146,6 +158,7 @@ void checkButtons(Player *p1, Player *p2);
 void checkSuccess(Player *p1, Player *p2);
 void checkGameover(Player *p1, Player *p2);
 void checkExit(Player *p1, Player *p2);
+void checkKeys(Player *p);
 
 int introInitHeight = 530;
 
@@ -154,7 +167,7 @@ HBITMAP player2WR, player2WL, player2BR, player2BL, powerB, powerW;
 HBITMAP player2WRBlue, player2WLBlue, player2BRBlue, player2BLBlue;
 HBITMAP player1WRBlue, player1WLBlue, player1BRBlue, player1BLBlue;
 HBITMAP wall, platform2, plt, plt2, portalW, portalB, doorW, doorB, buttonUpW, buttonUpB, buttonDownW, buttonDownB;
-HBITMAP exitSignW, exitSignB;
+HBITMAP exitSignW, exitSignB, keyW, keyB;
 HBITMAP buttonW1, buttonB1, buttonW2, buttonB2, leaderboardW, leaderboardB, finalBackground;
 
 /*  Declare Windows procedure  */
@@ -283,7 +296,7 @@ void draw(HWND hwnd)
     }
     if (level == 0)
         background = bk;
-    if (level == 1 || level == 2)
+    if (level == 1 || level == 2 || level == 4)
         background = bk2;
 
     player1White = player1.isRight ? player1.isBlue ? player1WRBlue : player1WR : player1.isBlue ? player1WLBlue
@@ -487,6 +500,93 @@ void draw(HWND hwnd)
         GetObject(buttonB1, sizeof(BITMAP), &bm);
         BitBlt(hdcMem, WIDTH - 250, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
     }
+    else if (level == 4)
+    {
+
+        // platform
+        SelectObject(hdcTmp, plt);
+        GetObject(plt, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, 0, HEIGHT - 170, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+
+        // door
+        SelectObject(hdcTmp, doorW);
+        GetObject(doorW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH - 180, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+
+        SelectObject(hdcTmp, doorB);
+        BitBlt(hdcMem, WIDTH - 180, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+
+        // wall
+        SelectObject(hdcTmp, wall);
+        GetObject(wall, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, -5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, WIDTH - bm.bmWidth - 5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+
+        // upper platform right
+
+        SelectObject(hdcTmp, platform2);
+        GetObject(platform2, sizeof(BITMAP), &bm);
+        upperPlatform3.width = bm.bmWidth - 400;
+        upperPlatform3.height = bm.bmHeight;
+        upperPlatform3.x = WIDTH - upperPlatform3.width - 70;
+        BitBlt(hdcMem, WIDTH - upperPlatform3.width - 70, introInitHeight - upperPlatform3.height - upperPlatform3.y, bm.bmWidth - 400, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+
+        // upper platform left
+
+        SelectObject(hdcTmp, platform2);
+        GetObject(platform2, sizeof(BITMAP), &bm);
+        upperPlatform4.width = bm.bmWidth - 400;
+        upperPlatform4.height = bm.bmHeight;
+        upperPlatform4.x = 60;
+        BitBlt(hdcMem, 60, introInitHeight - upperPlatform4.height - upperPlatform4.y, bm.bmWidth - 400, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+
+        // box right
+
+        SelectObject(hdcTmp, box);
+        GetObject(box, sizeof(BITMAP), &bm);
+        boxObj30.width = bm.bmWidth;
+        boxObj30.height = bm.bmHeight;
+        boxObj31.width = boxObj32.width = boxObj33.width = boxObj34.width  = boxObj30.width;
+        boxObj31.height = boxObj32.height = boxObj33.height = boxObj34.height = boxObj30.height;
+        BitBlt(hdcMem, boxObj30.x, introInitHeight - boxObj30.height - boxObj30.y, boxObj30.width, boxObj30.height, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, boxObj31.x, introInitHeight - boxObj30.height - boxObj31.y, boxObj30.width, boxObj30.height, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, boxObj32.x, introInitHeight - boxObj30.height - boxObj32.y, boxObj30.width, boxObj30.height, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, boxObj33.x, introInitHeight - boxObj30.height - boxObj33.y, boxObj30.width, boxObj30.height, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, boxObj34.x, introInitHeight - boxObj30.height - boxObj34.y, boxObj30.width, boxObj30.height, hdcTmp, 0, 0, SRCCOPY);
+
+        // box left
+
+        SelectObject(hdcTmp, box);
+        GetObject(box, sizeof(BITMAP), &bm);
+        boxObj35.width = bm.bmWidth;
+        boxObj35.height = bm.bmHeight;
+        boxObj36.width = boxObj37.width = boxObj38.width = boxObj39.width  = boxObj30.width;
+        boxObj36.height = boxObj37.height = boxObj38.height = boxObj39.height = boxObj30.height;
+        boxObj39.width  = boxObj30.width - 10;
+        BitBlt(hdcMem, boxObj35.x, introInitHeight - boxObj35.height - boxObj35.y, boxObj35.width, boxObj35.height, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, boxObj36.x, introInitHeight - boxObj35.height - boxObj36.y, boxObj35.width, boxObj35.height, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, boxObj37.x, introInitHeight - boxObj35.height - boxObj37.y, boxObj35.width, boxObj35.height, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, boxObj38.x, introInitHeight - boxObj35.height - boxObj38.y, boxObj35.width, boxObj35.height, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, boxObj39.x, introInitHeight - boxObj35.height - boxObj39.y, boxObj35.width, boxObj35.height, hdcTmp, 0, 0, SRCCOPY);
+
+        // key right
+
+        SelectObject(hdcTmp, keyW);
+        GetObject(keyW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH - 130, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, keyB);
+        BitBlt(hdcMem, WIDTH - 130, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+
+         // key left
+
+        SelectObject(hdcTmp, keyW);
+        GetObject(keyW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, 75, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, keyB);
+        BitBlt(hdcMem, 75, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        
+
+    }
     // player1
     SelectObject(hdcTmp, player1White);
     GetObject(player1White, sizeof(BITMAP), &bm);
@@ -645,6 +745,11 @@ void calculateSheepPosition(HWND hwnd)
             checkButtons(&player1, &player2);
             checkSuccess(&player1, &player2);
         }
+        if (level == 4)
+        {
+            checkKeys(&player1);
+            checkKeys(&player2);
+        }
     }
 }
 
@@ -720,6 +825,18 @@ void checkPortal(Player *p)
     {
         p->x = 105;
         p->y = p->initY = 0;
+        playPortalSound();
+    }
+}
+
+void checkKeys(Player *p)
+{
+    if (p->x == 70 && p->y == upperPlatform4.y + upperPlatform4.height)
+    {
+        playPortalSound();
+    }
+    if (p->x == WIDTH - 160 && p->y == upperPlatform3.y + upperPlatform3.height)
+    {
         playPortalSound();
     }
 }
@@ -833,6 +950,9 @@ void loadBitmaps()
 
     exitSignW = (HBITMAP)LoadImage(NULL, "assets/exitSignW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     exitSignB = (HBITMAP)LoadImage(NULL, "assets/exitSignB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+    keyW = (HBITMAP)LoadImage(NULL, "assets/keyW.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    keyB = (HBITMAP)LoadImage(NULL, "assets/keyB.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 }
 
 void deleteBitmaps()
@@ -868,14 +988,39 @@ void setDefaults()
     boxObj4.x = WIDTH / 2 - 280;
     boxObj5.x = WIDTH / 2;
 
+    boxObj30.x = WIDTH / 2 + 230;
+    boxObj31.x = WIDTH / 2 + 180;
+    boxObj32.x = WIDTH / 2 + 130;
+    boxObj33.x = WIDTH / 2 + 80;
+    boxObj34.x = WIDTH / 2 + 30;
+
+    boxObj35.x = 210;
+    boxObj36.x = 260;
+    boxObj37.x = 310;
+    boxObj38.x = 360;
+    boxObj39.x = 410;
+
     upperPlatform.y = 330;
     upperPlatform2.y = 330;
+    upperPlatform3.y = 330;
+    upperPlatform4.y = 330;
     boxObj.y = 300;
     boxObj1.y = 250;
     boxObj2.y = 200;
     boxObj3.y = 150;
     boxObj4.y = 100;
     boxObj5.y = leftPlt.y + boxObj5.height;
+
+    boxObj30.y = 300;
+    boxObj31.y = 250;
+    boxObj32.y = 200;
+    boxObj33.y = 150;
+    boxObj34.y = 100;
+    boxObj35.y = 300;
+    boxObj36.y = 250;
+    boxObj37.y = 200;
+    boxObj38.y = 150;
+    boxObj39.y = 100;
 
     if (level == 0)
         objects.push_back(&platform);
@@ -902,6 +1047,25 @@ void setDefaults()
         objects.push_back(&boxObj2);
         objects.push_back(&boxObj3);
         objects.push_back(&boxObj4);
+    }
+     if (level == 4)
+    {
+
+        objects.push_back(&platform);
+        objects.push_back(&rightWall);
+        objects.push_back(&leftWall);
+        objects.push_back(&upperPlatform3);
+        objects.push_back(&upperPlatform4);
+        objects.push_back(&boxObj30);
+        objects.push_back(&boxObj31);
+        objects.push_back(&boxObj32);
+        objects.push_back(&boxObj33);
+        objects.push_back(&boxObj34);
+        objects.push_back(&boxObj35);
+        objects.push_back(&boxObj36);
+        objects.push_back(&boxObj37);
+        objects.push_back(&boxObj38);
+        objects.push_back(&boxObj39);
     }
 
     objects.push_back(&player1);
