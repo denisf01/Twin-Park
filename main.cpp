@@ -15,6 +15,8 @@
 #include <thread>
 #include <chrono>
 #include <iomanip>
+#include "sqlite3.h"
+#include <commctrl.h>
 
 #define WIDTH 1000
 #define HEIGHT 700
@@ -32,9 +34,14 @@ void isGameOver(HWND);
 void draw(HWND);
 void calculateSheepPosition(HWND);
 void calculateBirdPosition(HWND);
+string getTotalTime();
+int getDuration();
+void saveTime();
 void calculateWolfPosition(HWND);
 void loadBitmaps();
+void InitListViewColumns(HWND hwndListView);
 void deleteBitmaps();
+int callback(void *pArg, int argc, char **argv, char **imekolone);
 void setDefaults();
 void setLevel(int);
 INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam);
@@ -137,6 +144,8 @@ Object boxObj5;
 int level = 0;
 bool showBox = false;
 bool isButtonDown = false;
+static HWND listHandle;
+sqlite3 *db;
 
 vector<Object *> objects = vector<Object *>();
 
@@ -262,20 +271,7 @@ void draw(HWND hwnd)
         DeleteObject(hdcMem);
         if (level == 3)
         {
-            std::chrono::duration<double> duration = endTime - startTime;
-            int totalSeconds = duration.count();
-            int hours, minutes, seconds;
-
-            secondsToHMS(totalSeconds, hours, minutes, seconds);
-
-            std::cout << std::setfill('0') << std::setw(2) << hours << ":"
-                      << std::setfill('0') << std::setw(2) << minutes << ":"
-                      << std::setfill('0') << std::setw(2) << seconds << std::endl;
-            string sHours = "0" + to_string(hours);
-            string sMinutes = "0" + to_string(minutes);
-            string sSeconds = "0" + to_string(seconds);
-
-            string totalTime = sHours.substr(sHours.size() - 2) + ":" + sMinutes.substr(sMinutes.size() - 2) + ":" + sSeconds.substr(sSeconds.size() - 2);
+            string totalTime = getTotalTime();
             TextOut(hdc, WIDTH / 2 - 30, HEIGHT - 115, totalTime.c_str(), strlen(totalTime.c_str()));
         }
         ReleaseDC(hwnd, hdc);
@@ -967,6 +963,7 @@ void setLevel(int l)
     if (level == 3)
     {
         endTime = std::chrono::high_resolution_clock::now();
+        saveTime();
         gameOver = true;
     }
     objects.clear();
@@ -1058,67 +1055,36 @@ INT_PTR CALLBACK DlgProcLeaderboard(HWND hdlg, UINT message, WPARAM wParam, LPAR
 
     case WM_INITDIALOG:
     {
-        // listHandle = GetDlgItem(hdlg, IDC_LISTA_STUDENATA);
-        // InitListViewColumns(listHandle);
+        listHandle = GetDlgItem(hdlg, IDC_LEADERBOARD);
+        InitListViewColumns(listHandle);
+        ListView_DeleteAllItems(listHandle);
+        sqlite3_open("leaderboard.db", &db);
+        int status;
+        char *err = 0;
+        char sql[200];
+
+        sprintf(sql, "SELECT teamName, time FROM Leaderboard order by sortTime ASC");
+
+        status = sqlite3_exec(db, sql, callback, 0, &err);
+        if (status == SQLITE_OK)
+        {
+
+            sqlite3_free(err);
+            sqlite3_close(db);
+        }
+        else
+        {
+            MessageBox(hdlg, err, "Gre�ka", MB_OK);
+            sqlite3_free(err);
+            sqlite3_close(db);
+            EndDialog(hdlg, 0);
+            break;
+        }
+        break;
 
         return TRUE;
     }
-    case WM_COMMAND:
-    {
-        switch (LOWORD(wParam))
-        {
-            // case SEARCH_ALL:
-            //     type = "all";
-            //     break;
-            // case SEARCH_IME:
-            //     type = "ime";
-            //     break;
-            // case SEARCH_PREZIME:
-            //     type = "prezime";
-            //     break;
 
-            // case IDC_SAVE:
-            // {
-            //     ListView_DeleteAllItems(listHandle);
-            //     sqlite3_open("studenti.db", &db);
-            //     int status;
-            //     char *err = 0;
-            //     char sql[200], tempUnos[50];
-            //     tempUnos[0] = 0;
-            //     GetWindowText(GetDlgItem(hdlg, SEARCH), tempUnos, sizeof(tempUnos));
-
-            //     if (tempUnos[0] == 0 && type != "all")
-            //     {
-            //         MessageBox(hdlg, "Potrebno je unijeti kriterij za pretragu", "Gre�ka", MB_OK | MB_ICONWARNING);
-            //         break;
-            //     }
-            //     if (type == "all")
-            //         sprintf(sql, "SELECT * FROM Studenti");
-            //     else if (type == "ime")
-            //         sprintf(sql, "SELECT * FROM Studenti WHERE ime = '%s'", tempUnos);
-            //     else
-            //         sprintf(sql, "SELECT * FROM Studenti WHERE prezime = '%s'", tempUnos);
-
-            //     status = sqlite3_exec(db, sql, callback, 0, &err);
-            //     if (status == SQLITE_OK)
-            //     {
-
-            //         sqlite3_free(err);
-            //         sqlite3_close(db);
-            //     }
-            //     else
-            //     {
-            //         MessageBox(hdlg, err, "Gre�ka", MB_OK);
-            //         sqlite3_free(err);
-            //         sqlite3_close(db);
-            //         EndDialog(hdlg, 0);
-            //         break;
-            //     }
-            //     break;
-            // }
-            // }
-            return TRUE;
-        }
     case WM_CLOSE:
     {
         EndDialog(hdlg, 0);
@@ -1127,5 +1093,85 @@ INT_PTR CALLBACK DlgProcLeaderboard(HWND hdlg, UINT message, WPARAM wParam, LPAR
     default:
         return FALSE;
     }
+}
+
+int callback(void *pArg, int argc, char **argv, char **imekolone)
+{
+    LVITEM lvItem;
+    memset(&lvItem, 0, sizeof(lvItem));
+
+    lvItem.mask = LVIF_TEXT;
+    lvItem.iItem = ListView_GetItemCount(listHandle);
+    lvItem.iSubItem = 0;
+    lvItem.pszText = argv[0];
+    ListView_InsertItem(listHandle, &lvItem);
+
+    lvItem.iSubItem = 1;
+    lvItem.pszText = argv[1];
+    ListView_SetItem(listHandle, &lvItem);
+
+    return 0;
+}
+
+void InitListViewColumns(HWND hwndListView)
+{
+    LVCOLUMN lvColumn;
+    lvColumn.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+    lvColumn.cx = 200; // Set the column width
+
+    lvColumn.iSubItem = 0;
+    lvColumn.pszText = "Team name";
+    ListView_InsertColumn(hwndListView, 0, &lvColumn);
+
+    lvColumn.iSubItem = 1;
+    lvColumn.pszText = "Time";
+    ListView_InsertColumn(hwndListView, 1, &lvColumn);
+}
+
+string getTotalTime()
+{
+
+    int totalSeconds = getDuration();
+    int hours, minutes, seconds;
+
+    secondsToHMS(totalSeconds, hours, minutes, seconds);
+    string sHours = "0" + to_string(hours);
+    string sMinutes = "0" + to_string(minutes);
+    string sSeconds = "0" + to_string(seconds);
+
+    return sHours.substr(sHours.size() - 2) + ":" + sMinutes.substr(sMinutes.size() - 2) + ":" + sSeconds.substr(sSeconds.size() - 2);
+}
+
+int getDuration()
+{
+    std::chrono::duration<double> duration = endTime - startTime;
+    return duration.count();
+}
+
+void saveTime()
+{
+    sqlite3_open("leaderboard.db", &db);
+    int status;
+    char *err = 0;
+    char sql[200];
+    sprintf(sql, "INSERT INTO Leaderboard VALUES ('%s', '%s', '%i');", teamName.c_str(), getTotalTime().c_str(), getDuration());
+    status = sqlite3_exec(db, sql, 0, 0, &err);
+    if (status == SQLITE_OK)
+    {
+        sqlite3_free(err);
+        sqlite3_close(db);
+        cout << "time saved";
+    }
+    else if (status == SQLITE_CONSTRAINT)
+    {
+        sprintf(sql, "UPDATE Leaderboard SET time =  CASE WHEN sortTime > '%i' THEN '%s' ELSE time, sortTime = CASE WHEN sortTime > '%i' THEN '%i' ELSE sortTime WHERE teamName = '%s';", getDuration(), getTotalTime().c_str(), getDuration(), getDuration(), teamName.c_str());
+        status = sqlite3_exec(db, sql, 0, 0, &err);
+        sqlite3_free(err);
+        sqlite3_close(db);
+    }
+    else
+    {
+        cout << err;
+        cout << "error in saving";
     }
 }
