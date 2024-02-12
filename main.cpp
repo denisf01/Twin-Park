@@ -92,12 +92,35 @@ void playPortalSound()
     mciSendString("play portal", NULL, 0, NULL);
 }
 
+void playKeySound()
+{
+    mciSendString("close key", NULL, 0, NULL);
+    mciSendString("open keySound.wav type waveaudio alias key",
+                  NULL, 0, NULL);
+    mciSendString("play key", NULL, 0, NULL);
+}
+
 void playGameoverSound()
 {
     mciSendString("close gameover", NULL, 0, NULL);
     mciSendString("open gameoverSound.wav type waveaudio alias gameover",
                   NULL, 0, NULL);
     mciSendString("play gameover", NULL, 0, NULL);
+}
+
+void playLockedSound()
+{
+    mciSendString("close locked", NULL, 0, NULL);
+    mciSendString("open lockedSound.wav type waveaudio alias locked",
+                  NULL, 0, NULL);
+    mciSendString("play locked", NULL, 0, NULL);
+}
+void playOpenSound()
+{
+    mciSendString("close open", NULL, 0, NULL);
+    mciSendString("open opendoorSound.wav type waveaudio alias open",
+                  NULL, 0, NULL);
+    mciSendString("play open", NULL, 0, NULL);
 }
 
 class Player : public Object
@@ -116,6 +139,7 @@ public:
     void jumping();
     bool isBlue = false;
     int jumpHeight = 100;
+    int hasKey = 0;
 };
 
 Player player1;
@@ -546,7 +570,7 @@ void draw(HWND hwnd)
         GetObject(box, sizeof(BITMAP), &bm);
         boxObj30.width = bm.bmWidth;
         boxObj30.height = bm.bmHeight;
-        boxObj31.width = boxObj32.width = boxObj33.width = boxObj34.width  = boxObj30.width;
+        boxObj31.width = boxObj32.width = boxObj33.width = boxObj34.width = boxObj30.width;
         boxObj31.height = boxObj32.height = boxObj33.height = boxObj34.height = boxObj30.height;
         BitBlt(hdcMem, boxObj30.x, introInitHeight - boxObj30.height - boxObj30.y, boxObj30.width, boxObj30.height, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, boxObj31.x, introInitHeight - boxObj30.height - boxObj31.y, boxObj30.width, boxObj30.height, hdcTmp, 0, 0, SRCCOPY);
@@ -560,9 +584,9 @@ void draw(HWND hwnd)
         GetObject(box, sizeof(BITMAP), &bm);
         boxObj35.width = bm.bmWidth;
         boxObj35.height = bm.bmHeight;
-        boxObj36.width = boxObj37.width = boxObj38.width = boxObj39.width  = boxObj30.width;
+        boxObj36.width = boxObj37.width = boxObj38.width = boxObj39.width = boxObj30.width;
         boxObj36.height = boxObj37.height = boxObj38.height = boxObj39.height = boxObj30.height;
-        boxObj39.width  = boxObj30.width - 10;
+        boxObj39.width = boxObj30.width - 10;
         BitBlt(hdcMem, boxObj35.x, introInitHeight - boxObj35.height - boxObj35.y, boxObj35.width, boxObj35.height, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, boxObj36.x, introInitHeight - boxObj35.height - boxObj36.y, boxObj35.width, boxObj35.height, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, boxObj37.x, introInitHeight - boxObj35.height - boxObj37.y, boxObj35.width, boxObj35.height, hdcTmp, 0, 0, SRCCOPY);
@@ -570,22 +594,24 @@ void draw(HWND hwnd)
         BitBlt(hdcMem, boxObj39.x, introInitHeight - boxObj35.height - boxObj39.y, boxObj35.width, boxObj35.height, hdcTmp, 0, 0, SRCCOPY);
 
         // key right
+        if (player1.hasKey != 2 && player2.hasKey != 2)
+        {
+            SelectObject(hdcTmp, keyW);
+            GetObject(keyW, sizeof(BITMAP), &bm);
+            BitBlt(hdcMem, WIDTH - 130, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+            SelectObject(hdcTmp, keyB);
+            BitBlt(hdcMem, WIDTH - 130, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        }
 
-        SelectObject(hdcTmp, keyW);
-        GetObject(keyW, sizeof(BITMAP), &bm);
-        BitBlt(hdcMem, WIDTH - 130, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
-        SelectObject(hdcTmp, keyB);
-        BitBlt(hdcMem, WIDTH - 130, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
-
-         // key left
-
-        SelectObject(hdcTmp, keyW);
-        GetObject(keyW, sizeof(BITMAP), &bm);
-        BitBlt(hdcMem, 75, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
-        SelectObject(hdcTmp, keyB);
-        BitBlt(hdcMem, 75, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
-        
-
+        // key left
+        if (player1.hasKey != 1 && player2.hasKey != 1)
+        {
+            SelectObject(hdcTmp, keyW);
+            GetObject(keyW, sizeof(BITMAP), &bm);
+            BitBlt(hdcMem, 75, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+            SelectObject(hdcTmp, keyB);
+            BitBlt(hdcMem, 75, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        }
     }
     // player1
     SelectObject(hdcTmp, player1White);
@@ -749,6 +775,7 @@ void calculateSheepPosition(HWND hwnd)
         {
             checkKeys(&player1);
             checkKeys(&player2);
+            checkSuccess(&player1, &player2);
         }
     }
 }
@@ -778,6 +805,14 @@ void checkSuccess(Player *p1, Player *p2)
 {
     if (p1->x >= WIDTH - 175 && p2->x >= WIDTH - 175 && p1->y == 0 && p2->y == 0)
     {
+        if (level == 4)
+        {
+            if ((!p1->hasKey || !p2->hasKey) && isPressed(VK_SPACE))
+                playLockedSound();
+            else if (isPressed(VK_SPACE))
+                playOpenSound();
+            return;
+        }
         cout << "Level completed" << endl;
         setLevel(++level);
     }
@@ -831,13 +866,15 @@ void checkPortal(Player *p)
 
 void checkKeys(Player *p)
 {
-    if (p->x == 70 && p->y == upperPlatform4.y + upperPlatform4.height)
+    if (p->x == 70 && p->y == upperPlatform4.y + upperPlatform4.height && p->hasKey == 0)
     {
-        playPortalSound();
+        playKeySound();
+        p->hasKey = 1;
     }
-    if (p->x == WIDTH - 160 && p->y == upperPlatform3.y + upperPlatform3.height)
+    if (p->x == WIDTH - 160 && p->y == upperPlatform3.y + upperPlatform3.height && p->hasKey == 0)
     {
-        playPortalSound();
+        playKeySound();
+        p->hasKey = 2;
     }
 }
 
@@ -1048,7 +1085,7 @@ void setDefaults()
         objects.push_back(&boxObj3);
         objects.push_back(&boxObj4);
     }
-     if (level == 4)
+    if (level == 4)
     {
 
         objects.push_back(&platform);
