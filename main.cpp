@@ -853,6 +853,8 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
                 level = 0;
                 objects.clear();
                 hearts = 3;
+                KillTimer(hwnd, 111);
+                KillTimer(hwnd, 222);
                 setDefaults();
             }
         }
@@ -1140,7 +1142,7 @@ void checkButtons(Player *p1, Player *p2)
         }
         return;
     }
-    if ((p1->x > 70 - 10 && p1->x < 70 + 10 && p1->y == upperPlatform6.y + upperPlatform6.height && p2->x > WIDTH - 140 - 10 && p2->x < WIDTH - 140 + 10 && p2->y == upperPlatform6.y + upperPlatform6.height || p2->x > 70 - 10 && p2->x < 70 + 10 && p2->y == upperPlatform6.y - upperPlatform6.height && p1->x > WIDTH - 140 - 10 && p1->x < WIDTH - 140 + 10 && p1->y == upperPlatform6.y - upperPlatform6.height) && level == 4)
+    if ((p1->x > 70 - 10 && p1->x < 70 + 10 && p1->y == upperPlatform6.y + upperPlatform6.height && p2->x > WIDTH - 140 - 10 && p2->x < WIDTH - 140 + 10 && p2->y == upperPlatform6.y + upperPlatform6.height || p2->x > 70 - 10 && p2->x < 70 + 10 && p2->y == upperPlatform6.y + upperPlatform6.height && p1->x > WIDTH - 140 - 10 && p1->x < WIDTH - 140 + 10 && p1->y == upperPlatform6.y + upperPlatform6.height) && level == 4)
     {
         buttonW1 = buttonW2 = buttonDownW;
         buttonB1 = buttonB2 = buttonDownB;
@@ -1297,6 +1299,8 @@ void deleteBitmaps()
 
 void setDefaults()
 {
+    upperPlatform10.isVisible = upperPlatform12.isVisible = upperPlatform14.isVisible = false;
+    upperPlatform7.isVisible = upperPlatform9.isVisible = upperPlatform11.isVisible = upperPlatform13.isVisible = true;
     isButtonDown = false;
     boxObj5.isVisible = false;
     if (level == 2 || level == 3)
@@ -1416,7 +1420,6 @@ void setDefaults()
     }
     if (level == 4)
     {
-        upperPlatform10.isVisible = upperPlatform12.isVisible = upperPlatform14.isVisible = false;
         objects.push_back(&platform5);
         objects.push_back(&rightWall);
         objects.push_back(&leftWall);
