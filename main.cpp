@@ -309,6 +309,8 @@ void draw(HWND hwnd)
         if (level == 5)
         {
             string totalTime = getTotalTime();
+            KillTimer(hwnd, 111);
+            KillTimer(hwnd, 222);
             playSuccessSound();
             TextOut(hdc, WIDTH / 2 - 30, HEIGHT - 115, totalTime.c_str(), strlen(totalTime.c_str()));
         }
