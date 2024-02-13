@@ -23,6 +23,8 @@
 #define isPressed(vk_code) ((GetAsyncKeyState(vk_code) & 0x8000) ? 1 : 0)
 
 using namespace std;
+HWND globalHwnd;
+bool showRules = false;
 
 string teamName = "";
 int hearts = 3;
@@ -55,6 +57,7 @@ public:
     int x;
     int y;
     bool isPlayer = false;
+    bool isVisible = true;
 };
 
 vector<Object *> filterObjects(const vector<Object *> &other, Object *obj)
@@ -62,7 +65,7 @@ vector<Object *> filterObjects(const vector<Object *> &other, Object *obj)
 
     // Filter condition
     auto condition = [&](Object *o)
-    { return obj->y == o->y + o->height && obj->x + obj->width > o->x && obj->x < o->x + o->width && o != obj; };
+    { return obj->y == o->y + o->height && obj->x + obj->width > o->x && obj->x < o->x + o->width && o != obj && o->isVisible; };
 
     // New vector to store filtered elements
     std::vector<Object *> filteredVector;
@@ -163,6 +166,7 @@ public:
 
 Player player1, player2;
 Object platform(WIDTH, 0, 0, 0);
+Object platform5(WIDTH / 3 - 100, 100, WIDTH / 2 - 100, -100);
 Object leftPlt(WIDTH / 3 - 30, 100, 0, -100);
 Object rightPlt(WIDTH, 100, WIDTH / 2 + 165, -100);
 Object rightWall(70, HEIGHT, WIDTH - 70, 0);
@@ -170,10 +174,12 @@ Object leftWall(70, HEIGHT, 0, 0);
 Object upperPlatform, upperPlatform2, upperPlatform3, upperPlatform4,
     boxObj, boxObj1, boxObj2, boxObj3, boxObj4, boxObj5,
     boxObj30, boxObj31, boxObj32, boxObj33, boxObj34,
-    boxObj35, boxObj36, boxObj37, boxObj38, boxObj39;
+    boxObj35, boxObj36, boxObj37, boxObj38, boxObj39,
+    upperPlatform5, upperPlatform6, upperPlatform7,
+    upperPlatform8, upperPlatform9, upperPlatform10,
+    upperPlatform11, upperPlatform12, upperPlatform13, upperPlatform14;
 
 int level = 0;
-bool showBox = false;
 bool isButtonDown = false;
 static HWND listHandle;
 sqlite3 *db;
@@ -197,7 +203,7 @@ HBITMAP player1WRBlue, player1WLBlue, player1BRBlue, player1BLBlue;
 HBITMAP wall, platform2, plt, plt2, portalW, portalB, doorW, doorB, buttonUpW, buttonUpB, buttonDownW, buttonDownB;
 HBITMAP exitSignW, exitSignB, keyW, keyB;
 HBITMAP buttonW1, buttonB1, buttonW2, buttonB2, leaderboardW, leaderboardB, finalBackground;
-HBITMAP hearts3W, hearts2W, hearts1W, hearts3B, hearts2B, hearts1B;
+HBITMAP hearts3W, hearts2W, hearts1W, hearts3B, hearts2B, hearts1B, rules;
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -292,7 +298,7 @@ void draw(HWND hwnd)
 
     if (gameOver)
     {
-        background = level == 4 ? finalBackground : bkGameOver;
+        background = level == 5 ? finalBackground : bkGameOver;
         hdcMem = CreateCompatibleDC(hdc);
         tmp1 = (HBITMAP)SelectObject(hdcMem, background);
         GetObject(background, sizeof(BITMAP), &bm);
@@ -300,7 +306,7 @@ void draw(HWND hwnd)
 
         SelectObject(hdcMem, tmp1);
         DeleteObject(hdcMem);
-        if (level == 4)
+        if (level == 5)
         {
             string totalTime = getTotalTime();
             playSuccessSound();
@@ -311,8 +317,12 @@ void draw(HWND hwnd)
     }
     if (level == 0)
         background = bk;
-    if (level != 0 && level != 4)
+    if (level != 0 && level != 5)
         background = bk2;
+    if (showRules)
+    {
+        background = rules;
+    }
 
     player1White = player1.isRight ? player1.isBlue ? player1WRBlue : player1WR : player1.isBlue ? player1WLBlue
                                                                                                  : player1WL;
@@ -334,7 +344,7 @@ void draw(HWND hwnd)
     GetObject(background, sizeof(BITMAP), &bm);
     StretchBlt(hdcMem, 0, 0, WIDTH, HEIGHT, hdcTmp, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
 
-    if (level == 0)
+    if (level == 0 && !showRules)
     {
 
         // title
@@ -486,7 +496,7 @@ void draw(HWND hwnd)
         BitBlt(hdcMem, boxObj2.x, introInitHeight - boxObj.height - boxObj2.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, boxObj3.x, introInitHeight - boxObj.height - boxObj3.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
         BitBlt(hdcMem, boxObj4.x, introInitHeight - boxObj.height - boxObj4.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
-        if (showBox)
+        if (boxObj5.isVisible)
             BitBlt(hdcMem, boxObj5.x, introInitHeight - boxObj.height - boxObj5.y, boxObj.width, boxObj.height, hdcTmp, 0, 0, SRCCOPY);
 
         // power
@@ -596,6 +606,151 @@ void draw(HWND hwnd)
             BitBlt(hdcMem, 75, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
         }
     }
+    if (level == 4)
+    {
+        // platform
+        SelectObject(hdcTmp, plt);
+        GetObject(plt, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH / 2 - 100, HEIGHT - 170, WIDTH / 3 - 100, bm.bmHeight, hdcTmp, 40, 0, SRCCOPY);
+
+        // open door
+        SelectObject(hdcTmp, portalW);
+        GetObject(portalW, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH / 2 - 30, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+
+        SelectObject(hdcTmp, portalB);
+        BitBlt(hdcMem, WIDTH / 2 - 30, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+
+        // door
+        if (!player1.hasKey && !player2.hasKey)
+        {
+            SelectObject(hdcTmp, doorW);
+            GetObject(doorW, sizeof(BITMAP), &bm);
+            BitBlt(hdcMem, WIDTH / 2 - 30, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+
+            SelectObject(hdcTmp, doorB);
+            BitBlt(hdcMem, WIDTH / 2 - 30, introInitHeight - bm.bmHeight + 5, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        }
+
+        // wall
+        SelectObject(hdcTmp, wall);
+        GetObject(wall, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, -5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, WIDTH - bm.bmWidth - 5, 0, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+
+        // upper platform right
+
+        SelectObject(hdcTmp, platform2);
+        GetObject(platform2, sizeof(BITMAP), &bm);
+        upperPlatform5.width = bm.bmWidth - 400;
+        upperPlatform5.height = bm.bmHeight;
+        upperPlatform5.x = WIDTH - upperPlatform5.width - 70;
+        BitBlt(hdcMem, WIDTH - upperPlatform5.width - 70, introInitHeight - upperPlatform5.height - upperPlatform5.y, bm.bmWidth - 400, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+
+        // upper platform left
+
+        SelectObject(hdcTmp, platform2);
+        GetObject(platform2, sizeof(BITMAP), &bm);
+        upperPlatform6.width = bm.bmWidth - 400;
+        upperPlatform6.height = bm.bmHeight;
+        upperPlatform6.x = 60;
+        BitBlt(hdcMem, 60, introInitHeight - upperPlatform6.height - upperPlatform6.y, bm.bmWidth - 400, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
+
+        // left platform 1
+        if (upperPlatform7.isVisible)
+        {
+            SelectObject(hdcTmp, platform2);
+            GetObject(platform2, sizeof(BITMAP), &bm);
+            upperPlatform7.width = bm.bmWidth - 450;
+            upperPlatform7.height = bm.bmHeight;
+            upperPlatform7.x = 300;
+            BitBlt(hdcMem, upperPlatform7.x, introInitHeight - upperPlatform7.height - upperPlatform7.y, bm.bmWidth - 450, bm.bmHeight, hdcTmp, 15, 0, SRCCOPY);
+        }
+
+        // left platform 2
+
+        // SelectObject(hdcTmp, platform2);
+        // GetObject(platform2, sizeof(BITMAP), &bm);
+        // upperPlatform8.width = bm.bmWidth - 450;
+        // upperPlatform8.height = bm.bmHeight;
+        // upperPlatform8.x = 120;
+        // BitBlt(hdcMem, upperPlatform8.x, introInitHeight - upperPlatform8.height - upperPlatform8.y, bm.bmWidth - 450, bm.bmHeight, hdcTmp, 15, 0, SRCCOPY);
+
+        // left platform 3
+        if (upperPlatform9.isVisible)
+        {
+
+            SelectObject(hdcTmp, platform2);
+            GetObject(platform2, sizeof(BITMAP), &bm);
+            upperPlatform9.width = bm.bmWidth - 450;
+            upperPlatform9.height = bm.bmHeight;
+            upperPlatform9.x = 350;
+            BitBlt(hdcMem, upperPlatform9.x, introInitHeight - upperPlatform9.height - upperPlatform9.y, bm.bmWidth - 450, bm.bmHeight, hdcTmp, 15, 0, SRCCOPY);
+        }
+        // left platform 4
+        if (upperPlatform10.isVisible)
+        {
+
+            SelectObject(hdcTmp, platform2);
+            GetObject(platform2, sizeof(BITMAP), &bm);
+            upperPlatform10.width = bm.bmWidth - 450;
+            upperPlatform10.height = bm.bmHeight;
+            upperPlatform10.x = 170;
+            BitBlt(hdcMem, upperPlatform10.x, introInitHeight - upperPlatform10.height - upperPlatform10.y, bm.bmWidth - 450, bm.bmHeight, hdcTmp, 15, 0, SRCCOPY);
+        }
+        // right platform 1
+        if (upperPlatform11.isVisible)
+        {
+
+            SelectObject(hdcTmp, platform2);
+            GetObject(platform2, sizeof(BITMAP), &bm);
+            upperPlatform11.width = bm.bmWidth - 450;
+            upperPlatform11.height = bm.bmHeight;
+            upperPlatform11.x = WIDTH / 2 + 140;
+            BitBlt(hdcMem, upperPlatform11.x, introInitHeight - upperPlatform11.height - upperPlatform11.y, bm.bmWidth - 450, bm.bmHeight, hdcTmp, 15, 0, SRCCOPY);
+        }
+        // right platform 2
+        if (upperPlatform12.isVisible)
+        {
+
+            SelectObject(hdcTmp, platform2);
+            GetObject(platform2, sizeof(BITMAP), &bm);
+            upperPlatform12.width = bm.bmWidth - 450;
+            upperPlatform12.height = bm.bmHeight;
+            upperPlatform12.x = WIDTH / 2 + 330;
+            BitBlt(hdcMem, upperPlatform12.x, introInitHeight - upperPlatform12.height - upperPlatform12.y, bm.bmWidth - 450, bm.bmHeight, hdcTmp, 15, 0, SRCCOPY);
+        }
+        // right platform 3
+        if (upperPlatform13.isVisible)
+        {
+
+            SelectObject(hdcTmp, platform2);
+            GetObject(platform2, sizeof(BITMAP), &bm);
+            upperPlatform13.width = bm.bmWidth - 450;
+            upperPlatform13.height = bm.bmHeight;
+            upperPlatform13.x = WIDTH / 2 + 70;
+            BitBlt(hdcMem, upperPlatform13.x, introInitHeight - upperPlatform13.height - upperPlatform13.y, bm.bmWidth - 450, bm.bmHeight, hdcTmp, 15, 0, SRCCOPY);
+        }
+        // right platform 4
+        if (upperPlatform14.isVisible)
+        {
+
+            SelectObject(hdcTmp, platform2);
+            GetObject(platform2, sizeof(BITMAP), &bm);
+            upperPlatform14.width = bm.bmWidth - 450;
+            upperPlatform14.height = bm.bmHeight;
+            upperPlatform14.x = WIDTH / 2 + 250;
+            BitBlt(hdcMem, upperPlatform14.x, introInitHeight - upperPlatform14.height - upperPlatform14.y, bm.bmWidth - 450, bm.bmHeight, hdcTmp, 15, 0, SRCCOPY);
+        }
+        // buttons
+        SelectObject(hdcTmp, buttonW1);
+        GetObject(buttonW1, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, 70, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        SelectObject(hdcTmp, buttonW2);
+        GetObject(buttonW2, sizeof(BITMAP), &bm);
+        BitBlt(hdcMem, WIDTH - 140, 200 - bm.bmHeight - 30, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+    }
+
     // player1
     SelectObject(hdcTmp, player1White);
     GetObject(player1White, sizeof(BITMAP), &bm);
@@ -619,13 +774,13 @@ void draw(HWND hwnd)
                                                    : hearts1W;
     heartsB = hearts == 3 ? hearts3B : hearts == 2 ? hearts2B
                                                    : hearts1B;
-    if (level != 0 && level != 4)
+    if (level != 0 && level != 5)
     {
         SelectObject(hdcTmp, heartsW);
         GetObject(heartsW, sizeof(BITMAP), &bm);
-        BitBlt(hdcMem, WIDTH - 150, 20, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
+        BitBlt(hdcMem, WIDTH - 180, 20, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCAND);
         SelectObject(hdcTmp, heartsB);
-        BitBlt(hdcMem, WIDTH - 150, 20, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
+        BitBlt(hdcMem, WIDTH - 180, 20, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCPAINT);
     }
 
     GetObject(hbmMem, sizeof(BITMAP), &bm);
@@ -651,11 +806,46 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
         loadBitmaps();
         setDefaults();
         sndPlaySound("backgroundSound.wav", SND_FILENAME | SND_LOOP | SND_ASYNC);
+        globalHwnd = hwnd;
+
+        break;
+    case WM_TIMER:
+        if (wParam == 111)
+        {
+            if (upperPlatform7.isVisible)
+            {
+                upperPlatform7.isVisible = upperPlatform9.isVisible = upperPlatform11.isVisible = upperPlatform13.isVisible = false;
+                KillTimer(hwnd, 111);
+                SetTimer(hwnd, 111, 1500, NULL);
+            }
+            else
+            {
+                upperPlatform7.isVisible = upperPlatform9.isVisible = upperPlatform11.isVisible = upperPlatform13.isVisible = true;
+                KillTimer(hwnd, 111);
+                SetTimer(hwnd, 111, 3000, NULL);
+            }
+        }
+        if (wParam == 222)
+        {
+            if (upperPlatform10.isVisible)
+            {
+                upperPlatform10.isVisible = upperPlatform12.isVisible = upperPlatform14.isVisible = false;
+                KillTimer(hwnd, 222);
+                SetTimer(hwnd, 222, 1500, NULL);
+            }
+            else
+            {
+                upperPlatform10.isVisible = upperPlatform12.isVisible = upperPlatform14.isVisible = true;
+                KillTimer(hwnd, 222);
+                SetTimer(hwnd, 222, 3000, NULL);
+            }
+        }
+
         break;
     case WM_KEYUP:
         if (wParam == VK_SPACE)
         {
-            if (gameOver && level != 4)
+            if (gameOver && level != 5)
             {
                 gameOver = false;
                 level = 0;
@@ -668,9 +858,15 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
         break;
     case WM_LBUTTONDOWN:
     {
+        if (showRules)
+        {
+            setLevel(1);
+            showRules = false;
+            break;
+        }
         int x = LOWORD(lParam);
         int y = HIWORD(lParam);
-        if (level == 4 && x > 845 && x < 939 && y > 530 && y < 640)
+        if (level == 5 && x > 845 && x < 939 && y > 530 && y < 640)
         {
             setLevel(0);
             hearts = 3;
@@ -787,6 +983,11 @@ void calculatePlayerPosition(HWND hwnd)
             checkKeys(&player2);
             checkSuccess(&player1, &player2);
         }
+        if (level == 4)
+        {
+            checkButtons(&player1, &player2);
+            checkSuccess(&player1, &player2);
+        }
     }
 }
 
@@ -813,7 +1014,7 @@ void Player::jumping()
 
 void checkSuccess(Player *p1, Player *p2)
 {
-    if (p1->x >= WIDTH - 175 && p2->x >= WIDTH - 175 && p1->y == 0 && p2->y == 0)
+    if (p1->x >= WIDTH - 175 && p2->x >= WIDTH - 175 && p1->y == 0 && p2->y == 0 && level != 4 && level != 0)
     {
         if (level == 1)
         {
@@ -827,6 +1028,10 @@ void checkSuccess(Player *p1, Player *p2)
             return;
         }
         cout << "Level completed" << endl;
+        setLevel(++level);
+    }
+    if (level == 4 && p1->y == 0 && p2->y == 0 && p1->x > WIDTH / 2 - 30 && p1->x < WIDTH / 2 && p2->x > WIDTH / 2 - 30 && p2->x < WIDTH / 2 && p1->hasKey)
+    {
         setLevel(++level);
     }
 }
@@ -866,7 +1071,7 @@ void checkGameover(Player *p1, Player *p2)
 }
 void checkExit(Player *p1, Player *p2)
 {
-    if ((p1->x < 25 && p1->y == 0) || (p2->x < 25 && p2->y == 0))
+    if ((p1->x < 25 && p1->y == 0) || (p2->x < 25 && p2->y == 0) && !showRules)
         exit(1);
 }
 
@@ -927,24 +1132,34 @@ void checkButtons(Player *p1, Player *p2)
         buttonB1 = buttonDownB;
         playButtonSound();
         isButtonDown = true;
-        if (!showBox)
+        if (!boxObj5.isVisible)
         {
-            showBox = true;
-            objects.push_back(&boxObj5);
+            boxObj5.isVisible = true;
         }
         return;
     }
-    buttonW1 = buttonUpW;
-    buttonW2 = buttonUpW;
-    buttonB1 = buttonUpB;
-    buttonB2 = buttonUpB;
-    if (showBox)
+    if ((p1->x > 70 - 10 && p1->x < 70 + 10 && p1->y == upperPlatform6.y + upperPlatform6.height && p2->x > WIDTH - 140 - 10 && p2->x < WIDTH - 140 + 10 && p2->y == upperPlatform6.y + upperPlatform6.height || p2->x > 70 - 10 && p2->x < 70 + 10 && p2->y == upperPlatform6.y - upperPlatform6.height && p1->x > WIDTH - 140 - 10 && p1->x < WIDTH - 140 + 10 && p1->y == upperPlatform6.y - upperPlatform6.height) && level == 4)
     {
-        showBox = false;
-        objects.pop_back();
+        buttonW1 = buttonW2 = buttonDownW;
+        buttonB1 = buttonB2 = buttonDownB;
+        playButtonSound();
+        isButtonDown = true;
+        p1->hasKey = p2->hasKey = 1;
+        return;
     }
-    leftPlt.width = WIDTH / 3 - 30;
-    isButtonDown = false;
+    if (level != 4)
+    {
+        buttonW1 = buttonUpW;
+        buttonW2 = buttonUpW;
+        buttonB1 = buttonUpB;
+        buttonB2 = buttonUpB;
+        if (boxObj5.isVisible)
+        {
+            boxObj5.isVisible = false;
+        }
+        leftPlt.width = WIDTH / 3 - 30;
+        isButtonDown = false;
+    }
 }
 
 void loadBitmaps()
@@ -952,6 +1167,7 @@ void loadBitmaps()
     bk = (HBITMAP)LoadImage(NULL, "assets/introBackground.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     plt = (HBITMAP)LoadImage(NULL, "assets/platform.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     plt2 = (HBITMAP)LoadImage(NULL, "assets/platformHole.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    rules = (HBITMAP)LoadImage(NULL, "assets/rules.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     hearts3W = (HBITMAP)LoadImage(NULL, "assets/hearts3W.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     hearts2W = (HBITMAP)LoadImage(NULL, "assets/hearts2W.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -1080,9 +1296,17 @@ void deleteBitmaps()
 void setDefaults()
 {
     isButtonDown = false;
-    showBox = false;
-    player1.x = WIDTH / 6 + 20;
-    player2.x = WIDTH / 6;
+    boxObj5.isVisible = false;
+    if (level == 2 || level == 3)
+    {
+        player1.x = WIDTH / 6 + 20;
+        player2.x = WIDTH / 6;
+    }
+    else
+    {
+        player1.x = WIDTH / 3 + 70;
+        player2.x = WIDTH / 3 + 200;
+    }
     player1.y = player1.initY = player2.y = player2.initY = 0;
     boxObj.x = WIDTH / 2;
     player1.isBlue = player2.isBlue = false;
@@ -1128,6 +1352,18 @@ void setDefaults()
     boxObj38.y = 150;
     boxObj39.y = 100;
 
+    // level 4
+    upperPlatform5.y = 330;
+    upperPlatform6.y = 330;
+    upperPlatform7.y = 50;
+    // upperPlatform8.y = 130;
+    upperPlatform9.y = 200;
+    upperPlatform10.y = 270;
+    upperPlatform11.y = 50;
+    upperPlatform12.y = 130;
+    upperPlatform13.y = 200;
+    upperPlatform14.y = 270;
+
     if (level == 0)
         objects.push_back(&platform);
     if (level == 2)
@@ -1155,6 +1391,7 @@ void setDefaults()
         objects.push_back(&boxObj2);
         objects.push_back(&boxObj3);
         objects.push_back(&boxObj4);
+        objects.push_back(&boxObj5);
     }
     if (level == 1)
     {
@@ -1175,12 +1412,29 @@ void setDefaults()
         objects.push_back(&boxObj38);
         objects.push_back(&boxObj39);
     }
+    if (level == 4)
+    {
+        upperPlatform10.isVisible = upperPlatform12.isVisible = upperPlatform14.isVisible = false;
+        objects.push_back(&platform5);
+        objects.push_back(&rightWall);
+        objects.push_back(&leftWall);
+        objects.push_back(&upperPlatform5);
+        objects.push_back(&upperPlatform6);
+        objects.push_back(&upperPlatform7);
+        // objects.push_back(&upperPlatform8);
+        objects.push_back(&upperPlatform9);
+        objects.push_back(&upperPlatform10);
+        objects.push_back(&upperPlatform11);
+        objects.push_back(&upperPlatform12);
+        objects.push_back(&upperPlatform13);
+        objects.push_back(&upperPlatform14);
+    }
 
     objects.push_back(&player1);
     objects.push_back(&player2);
 
-    buttonW1 = buttonUpW;
-    buttonB1 = buttonUpB;
+    buttonW1 = buttonW2 = buttonUpW;
+    buttonB1 = buttonB2 = buttonUpB;
 }
 
 bool shouldFall(Object *obj)
@@ -1210,7 +1464,7 @@ bool isBlocked(Object *p, bool isRight)
     {
         for (auto obj : objects)
         {
-            if (p->x + p->width == obj->x && !obj->isPlayer && p->y < obj->y + obj->height && p->y + p->height > obj->y)
+            if (p->x + p->width == obj->x && !obj->isPlayer && p->y < obj->y + obj->height && p->y + p->height > obj->y && obj->isVisible)
                 return true;
         }
         return false;
@@ -1219,7 +1473,7 @@ bool isBlocked(Object *p, bool isRight)
     {
         for (auto obj : objects)
         {
-            if (p->x == obj->x + obj->width && !obj->isPlayer && p->y < obj->y + obj->height && p->y + p->height > obj->y)
+            if (p->x == obj->x + obj->width && !obj->isPlayer && p->y < obj->y + obj->height && p->y + p->height > obj->y && obj->isVisible)
                 return true;
         }
         return false;
@@ -1234,7 +1488,7 @@ void setLevel(int l)
         startTime = std::chrono::high_resolution_clock::now();
         player1.isJumping = player2.isJumping = false;
     }
-    if (level == 4)
+    if (level == 5)
     {
         endTime = std::chrono::high_resolution_clock::now();
         saveTime();
@@ -1242,6 +1496,11 @@ void setLevel(int l)
     }
     if (level == 0)
         gameOver = false;
+    if (level == 4)
+    {
+        SetTimer(globalHwnd, 111, 3000, NULL);
+        SetTimer(globalHwnd, 222, 2000, NULL);
+    }
     objects.clear();
     setDefaults();
 }
@@ -1306,8 +1565,8 @@ INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM 
             }
             cout << string(tempUnos);
             teamName = string(tempUnos);
-            setLevel(1);
             EndDialog(hdlg, 0);
+            showRules = true;
         }
         }
         return TRUE;
