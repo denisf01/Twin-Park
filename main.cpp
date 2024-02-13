@@ -222,9 +222,9 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
     wincl.cbSize = sizeof(WNDCLASSEX);
 
     /* Use default icon and mouse-pointer */
-    wincl.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    wincl.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
-    wincl.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wincl.hIcon = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_ICON1));
+    wincl.hIconSm = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDI_ICON1));
+    wincl.hCursor = LoadCursor(hThisInstance, MAKEINTRESOURCE(IDC_CURSOR1));
     wincl.lpszMenuName = NULL; /* No menu */
     wincl.cbClsExtra = 0;      /* No extra bytes after the window class */
     wincl.cbWndExtra = 0;      /* structure or the window instance */

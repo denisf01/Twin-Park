@@ -23,3 +23,6 @@ FONT 8, "Ms Shell Dlg"
     CONTROL         "", IDC_LEADERBOARD, "SysListView32", LVS_REPORT | WS_BORDER | WS_TABSTOP, 15, 70, 270, 60
 
 }
+
+IDI_ICON1               ICON    "icon.ico"
+IDC_CURSOR1             CURSOR  "cursor.cur"
