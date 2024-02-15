@@ -29,9 +29,7 @@ bool showRules = false;
 string teamName = "";
 int hearts = 3;
 auto startTime = std::chrono::high_resolution_clock::now();
-;
 auto endTime = std::chrono::high_resolution_clock::now();
-;
 
 void draw(HWND);
 void calculatePlayerPosition(HWND);
@@ -390,12 +388,6 @@ void draw(HWND hwnd)
     }
     else if (level == 2)
     {
-
-        // //   platform
-        // SelectObject(hdcTmp, plt);
-        // GetObject(plt, sizeof(BITMAP), &bm);
-        // BitBlt(hdcMem, -30, HEIGHT - 170, bm.bmWidth, bm.bmHeight, hdcTmp, 0, 0, SRCCOPY);
-
         // portal
 
         SelectObject(hdcTmp, portalW);
@@ -669,15 +661,6 @@ void draw(HWND hwnd)
             BitBlt(hdcMem, upperPlatform7.x, introInitHeight - upperPlatform7.height - upperPlatform7.y, bm.bmWidth - 450, bm.bmHeight, hdcTmp, 15, 0, SRCCOPY);
         }
 
-        // left platform 2
-
-        // SelectObject(hdcTmp, platform2);
-        // GetObject(platform2, sizeof(BITMAP), &bm);
-        // upperPlatform8.width = bm.bmWidth - 450;
-        // upperPlatform8.height = bm.bmHeight;
-        // upperPlatform8.x = 120;
-        // BitBlt(hdcMem, upperPlatform8.x, introInitHeight - upperPlatform8.height - upperPlatform8.y, bm.bmWidth - 450, bm.bmHeight, hdcTmp, 15, 0, SRCCOPY);
-
         // left platform 3
         if (upperPlatform9.isVisible)
         {
@@ -875,7 +858,6 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             setLevel(0);
             hearts = 3;
         }
-        cout << x << " " << y << endl;
     }
 
     break;
@@ -1031,7 +1013,6 @@ void checkSuccess(Player *p1, Player *p2)
             }
             return;
         }
-        cout << "Level completed" << endl;
         setLevel(++level);
     }
     if (level == 4 && p1->y == 0 && p2->y == 0 && p1->x > WIDTH / 2 - 30 && p1->x < WIDTH / 2 && p2->x > WIDTH / 2 - 30 && p2->x < WIDTH / 2 && p1->hasKey)
@@ -1568,7 +1549,6 @@ INT_PTR CALLBACK DlgProcTeamName(HWND hdlg, UINT message, WPARAM wParam, LPARAM 
                 MessageBox(hdlg, "Enter valid team name!", "Error", MB_OK | MB_ICONWARNING);
                 break;
             }
-            cout << string(tempUnos);
             teamName = string(tempUnos);
             EndDialog(hdlg, 0);
             showRules = true;
@@ -1614,7 +1594,7 @@ INT_PTR CALLBACK DlgProcLeaderboard(HWND hdlg, UINT message, WPARAM wParam, LPAR
         }
         else
         {
-            MessageBox(hdlg, err, "Gre�ka", MB_OK);
+            MessageBox(hdlg, err, "Error", MB_OK);
             sqlite3_free(err);
             sqlite3_close(db);
             EndDialog(hdlg, 0);
@@ -1700,20 +1680,17 @@ void saveTime()
     {
         sqlite3_free(err);
         sqlite3_close(db);
-        cout << "time saved";
     }
     else if (status == SQLITE_CONSTRAINT)
     {
         sprintf(sql, "UPDATE Leaderboard SET time = CASE WHEN sortTime > %i THEN '%s' ELSE time END, sortTime = CASE WHEN sortTime > %i THEN %i ELSE sortTime END WHERE teamName = '%s';", getDuration(), getTotalTime().c_str(), getDuration(), getDuration(), teamName.c_str());
         status = sqlite3_exec(db, sql, 0, 0, &err);
         if (status != SQLITE_OK)
-            cout << err;
-        sqlite3_free(err);
+            sqlite3_free(err);
         sqlite3_close(db);
     }
     else
     {
-        cout << err;
-        cout << "error in saving";
+        cout << "Error: :" << err;
     }
 }
